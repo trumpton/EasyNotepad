@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Help</class>
+ <widget class="QDialog" name="Help">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>911</width>
+    <height>471</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Easy Notepad Help</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="Icon.qrc">
+    <normaloff>:/icon-image.png</normaloff>:/icon-image.png</iconset>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="SafeTextEdit" name="helpText">
+     <property name="accessibleName">
+      <string>Easy Notepad Help</string>
+     </property>
+     <property name="plainText">
+      <string>&gt;&gt; 1. COMMON SHORTCUTS
+  Control-F - Find in Current Document (F3 - Find Next)
+  Control-G - Find Global (in Contents of All Documents)
+  Control-Shift-G - Find All (in All Docs inc. Backups and Deleted)
+  Control-I - Insert Template
+  Control-L - Forward Current Selection as an Email Attachment
+  Control-O - Open / Create File / Folder
+  Control-R - Rename Current File
+  Control-S - Save Current File
+
+&gt;&gt; 2. MENUS
+
+&gt;&gt; 2.1. FILE MENU - ALT-F
+  Open / Create File / Folder
+  Save Current File
+  Rename Current File
+  Move Current File
+  Delete Current File
+  Undelete Current Backup
+
+&gt;&gt; 2.2. SEARCH MENU (ALt-S)
+  Find First
+  Find Next
+  Find Global
+  Find All
+
+&gt;&gt; 2.3. EDIT MENU (Alt-E)
+  Insert Template
+
+&gt;&gt; 2.4. HELP MENU (Alt-H)
+  Help
+  About Easy Notepad
+
+&gt;&gt; 3. USING OPEN FILE
+  Note, you must open a file to edit it.  Easy Notepad does not allow you to   edit a file which doesn't have a file name.  Open File (Control-O) presents   a single line edit, which is navigated with the arrow keys.
+  The line edit is in up to three sections. The first section is the folder.  
+  Use up/down to navigate the folders.  You can also press the first letter   of a folder name to jump more quickly.
+  To create a folder, select the very top entry, either with the arrow keys, or  by pressing minus followed by enter.
+  To remove a folder, it has to be empty.  If it is empty, the delete folder   option will be available in the second section.
+  The second section allows you to navigate files.  As with the folder section,  you use the arrow keys or press the first letter of the filename.
+  As with the folders, select the first entry (minus) and enter to create a new  file.  
+  When you select a file, if there are multiple versions of the file, the list of backups will appear in the third seciton.
+  If the version called 'latest' is selected, the file will be writeable, but  any other versions will be opened read-only.
+  When you have selected the file you want, press enter to open it.
+
+&gt;&gt; 4. USING INSERT TEMPLATE
+  The folder called Templates is treated specially, and any file stored within it can be used as a template. When editing a document, press Control-I to insert a template, and you will be offered the list of files in the templates folder. Select a template and press Enter to insert the template contents at the current position in the current file.
+  Templates can contain a number of Macros which are interpreted when the template is inserted:
+    $WEEKDAY - The current day of the week (e.g. Sunday)
+    $MONTHNAME - The current month (e.g. March)
+    $FULLYEAR - The year (4 digits, e.g. 1949)
+    $DAY - The day of the month (2 digits)
+    $MONTH - The month of the year (2 digits)
+    $YEAR - The year (2 digits, e.g. 49)
+    $TIME - The 24-hour time (e.g. 18:04)
+    $FILEPATH - The path to the file
+    $FILENAME - The current (descriptive) file name
+    $FOLDERNAME - The current (descriptive) folder name
+
+&gt;&gt; 5. USING FORWARD SELECTION AS EMAIL
+  Selecting Text, and pressing Control-L will cause the current selection to be written to a temporary file, and the chosen email package launched with the file attached.
+
+&gt;&gt; 6. COMMAND LINE OPTIONS
+  Launching Easy Notepad from the command line with no arguments will open the program read-only, with no file loaded.
+  If a file is specified on the command line, it is opened.
+  If the file exists in the EasyNotepad database (as specified in the ini file), it is opened writable, just as if it had been opened with Control-O.
+  If the file does not exist in the EasyNotepad database (i.e. somewhere else in the filesystem), it is opened read-only.
+
+&gt;&gt; 7. SETTINGS
+
+  The settings are stored in an EasyNotepad.ini file, which is located in the EasyNotepad data folder or TrumptonApps folder  in the user's home directory, or the application directory.  The settings file has a number of sections:
+    [database] - This contains details of the database (e.g. location)
+    [email] - This section contains the command required to send the selected text  (which is exported as a file) to an email recipient (with Control-L).
+    [import..] - These sections list the commands required to import and parse files  in other formats (e.g. doc and xls).
+    [load...] - These sections contain the Codecs that are offered when loading a file which is not in a recognised format (e.g. ISO8859-15).
+
+&gt;&gt; 7.1. DATABASE SETTINGS
+  The [database] section contans a single entry: 'path'. Thus path may contain a number of macros as follows.
+    $HOME - User's Home Directory
+    $CONFIG - Directory EasyNotepad.ini was loaded from
+  If not supplied, $HOME/EasyNotepad is used.
+
+&gt;&gt; 7.2. EMAIL SETTINGS
+  The [email] section contains a single entry: command.  This command can contain a number of macros as follows:
+    $HOME - User's Home Directory
+    $CONFIG - This is the $HOME/TrumptonApps directory
+    $INI - Directory EasyNotepad.ini was loaded from
+    $FILEPATH - The full path to the file to be inserted
+    $FILENAME - The Folder-File (descriptive) name of the file
+    $APPDIR - The path to the Executable application
+  Note that the entire entry must be quoted, and separate entries on the command line must be escape-quoted, e.g.
+    command=&quot;\&quot;c:\Program Files\Email.exe\&quot; -option \&quot;$FILEPATH\&quot;&quot;
+
+&gt;&gt; 7.3. FILE IMPORT SETTINGS
+  The [import...] sections contain three entries: extension, codec and command.  When files of 'extension' are opened, the 'command' is run, and whatever is passed to stdout is imported into EasyNotepad using 'codec'.  The command contain a number of macros, as follows:
+    $HOME - User's Home Directory
+    $CONFIG - This is the $HOME/TrumptonApps directory
+    $INI - Directory EasyNotepad.ini was loaded from
+    $FILEPATH - The full path to the file to be inserted
+    $APPDIR - The path to the Executable application
+  Note that the entire entry must be quoted, and separate entries on the command line must be escape-quoted, e.g.
+    command=&quot;\&quot;c:/Program Files/ParseFile.exe\&quot; --doc --stdout \&quot;$FILEPATH\&quot;&quot;
+
+&gt;&gt; 7.4. FILE OPEN SETTINGS
+  The [load...] section contains two entries: codec and description.  When files are opened (not imported), and they contain unrecognised characters, a prompt is presented asking which codec to use in order to interpret the file.  
+  The list of codecs is given in the [load...] sections.  Note that the codec is not case sensitive, but must match exactly the format of the codecs understood by QT applications.  
+  A special codec called 'System' is automatically inserted into the list of codecs, and this maps to the default system codec (for example it would be UTF-8 on Linux, and would be WIndows-1252 on a UK Windows machine).  
+
+&gt;&gt;7.5. INI FILE EXAMPLE
+
+Notes:
+  Lines with spaces should be quoted
+  Arguments within a line should be quoted and escaped, i.e. \&quot;
+  Backslashes should be escaped, i.e. \\
+  Forward slashes may be used in paths instead of backslashes - these are automatically interpreted
+  When supplying a path, a trailing slash should not be included
+
+[database]
+path=&quot;$HOME/TrumptonApps/EasyNotepad&quot;
+
+[email]
+command=&quot;\&quot;C:\\Program Files (x86)\\Mozilla Thunderbird\\thunderbird.exe\&quot; -compose \&quot;subject='$FILENAME',body='$FILENAME Attached',attachment='file://$FILEPATH'\&quot;&quot;
+
+[import-doc]
+extension=doc
+codec=System
+command=&quot;\&quot;C:\\Program Files (x86)\\LibreOffice 5\\program\\python.exe\&quot; \&quot;$DIRAPPLICATION\\unoconv\&quot; -f txt --stdout \&quot;$FILEPATH\&quot;&quot;
+
+[import-docx]
+extension=docx
+codec=System
+command=&quot;\&quot;C:\\Program Files (x86)\\LibreOffice 5\\program\\python.exe\&quot; \&quot;$DIRAPPLICATION\\unoconv\&quot; -f txt --stdout \&quot;$FILEPATH\&quot;&quot;
+
+[import-odt]
+extension=odt
+codec=System
+command=&quot;\&quot;C:\\Program Files (x86)\\LibreOffice 5\\program\\python.exe\&quot; \&quot;$DIRAPPLICATION\\unoconv\&quot; -f txt --stdout \&quot;$FILEPATH\&quot;&quot;
+
+[import-xls]
+extension=xls
+codec=System
+command=&quot;\&quot;C:\\Program Files (x86)\\LibreOffice 5\\program\\python.exe\&quot; \&quot;$DIRAPPLICATION\\unoconv\&quot; -f txt --stdout \&quot;$FILEPATH\&quot;&quot;
+
+[import-xlsx]
+extension=xlsx
+codec=System
+command=&quot;\&quot;C:\\Program Files (x86)\\LibreOffice 5\\program\\python.exe\&quot; \&quot;$DIRAPPLICATION\\unoconv\&quot; -f txt --stdout \&quot;$FILEPATH\&quot;&quot;
+
+[import-ods]
+extension=ods
+codec=System
+command=&quot;\&quot;C:\\Program Files (x86)\\LibreOffice 5\\program\\python.exe\&quot; \&quot;$DIRAPPLICATION\\unoconv\&quot; -f txt --stdout \&quot;$FILEPATH\&quot;&quot;
+
+[[load-1252]
+codec=Windows-1252
+description=&quot;Windows-1252: Windows, Western Europe&quot;
+
+[load-8859-1]
+codec=ISO8859-1
+description=&quot;ISO8859-1: ANSI, Latin-1, Western Europe&quot;
+
+[load-8859-15]
+codec=ISO8859-15
+description=&quot;ISO8859-15: ANSI, Latin-9, Western Europe&quot;
+</string>
+     </property>
+     <property name="textInteractionFlags">
+      <set>Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>SafeTextEdit</class>
+   <extends>QPlainTextEdit</extends>
+   <header>../Lib/safetextedit.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources>
+  <include location="Icon.qrc"/>
+ </resources>
+ <connections/>
+</ui>
