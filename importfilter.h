@@ -8,10 +8,13 @@
 #include "formatselect.h"
 #include "importfilter.h"
 #include "../Lib/iniconfig.h"
+#include "encryption.h"
+
 
 class Record {
 private:
     QString dext, dcodec, dcommand ;
+
 public:
     Record(QString ext, QString codec, QString command) ;
     bool isEmpty() ;
@@ -23,6 +26,7 @@ public:
 class ImportFilter
 {
 private:
+    Encryption *enc ;
     QList <Record> conf ;
     FormatSelect codecSelectDialog ;
     Record& FindFilter(QString filename) ;
@@ -32,8 +36,8 @@ private:
 
 public:
     ImportFilter();
-    bool init(IniConfig ini, QString inipath) ;
-    bool LoadFile(QString filename, QString& contents, QString datadir) ;
+    bool init(IniConfig ini, QString inipath, Encryption *enc) ;
+    bool LoadFile(QString filename, QString& contents, QString datadir = QString(".")) ;
 
 
 };

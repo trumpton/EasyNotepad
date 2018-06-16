@@ -55,13 +55,21 @@
      <x>0</x>
      <y>0</y>
      <width>970</width>
-     <height>27</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
     <property name="title">
      <string>&amp;File</string>
     </property>
+    <widget class="QMenu" name="menuKey_and_Password">
+     <property name="title">
+      <string>Key and Password</string>
+     </property>
+     <addaction name="actionSet_Encryption_Key"/>
+     <addaction name="actionChange_Password"/>
+     <addaction name="action_Logout"/>
+    </widget>
     <addaction name="action_Open"/>
     <addaction name="action_Save"/>
     <addaction name="action_Email"/>
@@ -70,6 +78,8 @@
     <addaction name="action_Move_File"/>
     <addaction name="action_Delete"/>
     <addaction name="action_Undelete"/>
+    <addaction name="separator"/>
+    <addaction name="menuKey_and_Password"/>
     <addaction name="separator"/>
     <addaction name="actionE_xit"/>
    </widget>
@@ -101,7 +111,23 @@
    <addaction name="menu_Edit"/>
    <addaction name="menuHelp"/>
   </widget>
-  <widget class="QStatusBar" name="statusBar"/>
+  <widget class="QStatusBar" name="statusBar">
+   <property name="minimumSize">
+    <size>
+     <width>0</width>
+     <height>32</height>
+    </size>
+   </property>
+   <property name="maximumSize">
+    <size>
+     <width>16777215</width>
+     <height>32</height>
+    </size>
+   </property>
+   <property name="layoutDirection">
+    <enum>Qt::RightToLeft</enum>
+   </property>
+  </widget>
   <action name="action_Save">
    <property name="text">
     <string>&amp;Save</string>
@@ -229,6 +255,21 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+L</string>
+   </property>
+  </action>
+  <action name="actionSet_Encryption_Key">
+   <property name="text">
+    <string>Set Encryption Key</string>
+   </property>
+  </action>
+  <action name="actionChange_Password">
+   <property name="text">
+    <string>Change Password</string>
+   </property>
+  </action>
+  <action name="action_Logout">
+   <property name="text">
+    <string>&amp;Logout</string>
    </property>
   </action>
  </widget>

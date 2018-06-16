@@ -10,6 +10,7 @@
 class FileNavigator : public QLineEdit
 {
     Q_OBJECT
+
 private:
     QString directory ;
     QString tempdirectory ;
@@ -20,11 +21,12 @@ private:
     bool nofilename ;
     bool selectnew, isbackup ;
     int selection, folderindex, fileindex, backupindex ;
-    QString backupFolderPath, folderPath, backupFilePath, editableFilePath, filePath, fileName ;
+    QString backupFolderPath, folderPath, encBackupFilePath, backupFilePath, editableFilePath, encFilePath, filePath, fileName ;
+    QString& parseBackupDate(QString backupdate) ;
 
     void loadFolders(QString directory) ;
-    void loadFiles(QString directory, QString mask) ;
-    void loadBackups(QString directory, QString mask) ;
+    void loadFiles(QString directory, QString mask1, QString mask2);
+    void loadBackups(QString directory, QString mask1, QString mask2) ;
 
     void keyPressEvent(QKeyEvent *event) ;
 
@@ -57,7 +59,8 @@ public:
     // the currently selected file path / name is returned
     QString& getFilePath(QString filename = QString(""), bool preferbackups=false) ; // Returns the path to the file (defaults selected)
     QString& getEditableFilePath(QString filename = QString("")) ;
-    QString& getFileName(bool includefolder=true, bool includebackupdate=false) ;                                        // Returns the pretty version of the selected filename
+
+    QString& getFileDescription(bool includefolder=true, bool includebackupdate=false) ;       // Returns the pretty version of the selected filename
 
     // Return the temp and backup folder and file paths
     QString& getTempFolderPath() ;
@@ -68,8 +71,13 @@ public:
     bool isRenameFolder() ;
     bool isDeleteFolder() ;
     bool isCreateFolder() ;
+    bool isCreateEncryptedFolder() ;
     bool isCreateFile() ;
     bool isBackup() ;
+
+    // Return whether the folder or the file/backup is encrypted or not
+    bool isFolderEncrypted() ;
+    bool isFileEncrypted() ;
 
     // TODO: should be able to make this private
     void update(int cursorpos=-1) ;

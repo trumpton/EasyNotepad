@@ -11,6 +11,20 @@ class FileSelect : public QDialog
 {
     Q_OBJECT
 
+
+public:
+    typedef enum {
+        Cancel = 0,
+        DeleteFolder,
+        CreateFolder,
+        RenameFolder,
+        CreateEncryptedFolder,
+        CreateFile,
+        CreateEncryptedFile,
+        LoadFile,
+        LoadBackup
+    } InputType ;
+
 public:
     explicit FileSelect(QWidget *parent = 0);
     void setPath(QString path) ;
@@ -21,19 +35,29 @@ public:
     void clearFilename() ;
 
     bool isReadOnly() ;
-    bool isCreateFolder() ;
-    bool isRenameFolder() ;
-    bool isCreateFile() ;
-    bool isDeleteFolder() ;
+    bool isFileEncrypted() ;
+    bool isFolderEncrypted() ;
 
-    int exec() ;
+
+    InputType execDialog() ;
+
+    QString directory ;
+    QString tempdirectory ;
+    QStringList folders ;
+    QStringList files ;
+    QStringList backups ;
+
+    bool nofilename ;
+    bool selectnew, isbackup ;
+    int selection, folderindex, fileindex, backupindex ;
+    QString backupFolderPath, folderPath, encBackupFilePath, backupFilePath, editableFilePath, encFilePath, filePath, fileName ;;
 
     QString& getPath() ;                                         // Returns the path to the database
 
     QString& getFolderPath(QString foldername = QString("")) ;   // Returns the path to the folder (defaults selected)
     QString& getFilePath(QString filename = QString(""), bool preferbackups=false) ;       // Returns the path to the file (defaults selected)
     QString& getEditableFilePath(QString filename = QString("")) ;
-    QString& getFileName(bool includefolder, bool includebackupdate) ;  // Returns the pretty filename
+    QString& getFileDescription(bool includefolder, bool includebackupdate) ;  // Returns the pretty filename
     QString getFileDate() ;                                     // Returns the date of the file
 
     QString& getTempFolderPath() ;                               // Returns the temp folder name

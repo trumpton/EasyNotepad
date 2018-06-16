@@ -2,6 +2,7 @@
 #include <QTextStream>
 #include <QString>
 #include <QProgressDialog>
+#include <QPushButton>
 #include "filetypes.h"
 #include "globalsearch.h"
 #include "ui_globalsearch.h"
@@ -18,6 +19,14 @@ GlobalSearch::GlobalSearch(QWidget *parent) :
     ui->setupUi(this);
     clearResults() ;
     ui->listSearchResults->setModel(strings.getModel()) ;
+
+    QPushButton* okBtn = ui->buttonBox->button(QDialogButtonBox::Ok);
+    okBtn->setAutoDefault(true);
+    okBtn->setDefault(true);
+
+    QPushButton* caBtn = ui->buttonBox->button(QDialogButtonBox::Cancel);
+    caBtn->setAutoDefault(false);
+    caBtn->setDefault(false);
 }
 
 GlobalSearch::~GlobalSearch()
@@ -25,11 +34,19 @@ GlobalSearch::~GlobalSearch()
     delete ui;
 }
 
-void GlobalSearch::setSearch(QString& path, bool currentfiles, QString& searchtext)
+void GlobalSearch::setSearch(ImportFilter *importfilter, QString& path, bool currentfiles, QString& searchtext)
 {
     this->path=path ;
     this->currentfiles=currentfiles ;
     this->searchtext=searchtext ;
+    this->importfilter = importfilter ;
+}
+
+
+void GlobalSearch::addString(QString resulttext, QString resulthint)
+{
+    strings.addString(resulttext, resulthint) ;
+    entries++ ;
 }
 
 QString& GlobalSearch::getSelection()
@@ -52,10 +69,10 @@ QString& GlobalSearch::getSelectionFileName()
     return getSelectionFilenameResponse ;
 }
 
+
 int GlobalSearch::exec()
 {
     clearResults() ;
-
 
     QStringList directories ;
     parseDirectory(path, directories, "") ;
@@ -73,31 +90,42 @@ int GlobalSearch::exec()
 
     for (int i=0; i<isz; i++) {
 
+        // Update progress bar and allow progress bar to update
         progress.setValue(i) ;
+        qApp->processEvents();
+
         if (progress.wasCanceled())
             break ;
         QApplication::processEvents() ;
 
         QStringList files ;
-        QString folderpath = path + "/" + directories.at(i) ;
+        QString directory = directories.at(i) ;
+        QString folderpath = path + "/" + directory ;
+
         if (currentfiles) {
-            parseDirectory(folderpath, files, TXT) ;
+            parseDirectory(folderpath, files, TXT, false, true) ;
+            parseDirectory(folderpath, files, ENC, false, false) ;
             for (int j=0, jsz=files.size(); j<jsz; j++) {
-                QString filepath = folderpath + "/" + files.at(j) + "." + TXT ;
-                if (searchInFile(files.at(j), filepath, searchtext) ) {
-                    addString(directories.at(i) + ": " + files.at(j), filepath) ;
+                QString file = files.at(j) ;
+                QString filepath = folderpath + "/" + file ;
+                if (searchInFile(file, filepath, searchtext) ) {
+                    addString(directory.replace(ENF,"") + ": " + file.replace(TXT,"").replace(ENC,""), filepath) ;
                 }
             }
+
         } else {
             QStringList backups ;
             parseDirectory(folderpath, backups, "") ;
             for (int j=0, jsz=backups.size(); j<jsz; j++) {
-                QString backuppath = folderpath + "/" + backups.at(j) ;
-                parseDirectory(backuppath, files, BAK, true) ;
+                QString backup = backups.at(j) ;
+                QString backuppath = folderpath + "/" + backup ;
+                parseDirectory(backuppath, files, BAK, true, true) ;
+                parseDirectory(backuppath, files, ENB, true, false) ;
                 for (int k=0, ksz=files.size(); k<ksz; k++) {
-                    QString filepath = backuppath + "/" + files.at(k) + "." + BAK ;
-                    if (searchInFile(files.at(k), filepath, searchtext)) {
-                        addString(directories.at(i) + ": " + backups.at(j) + " (" + parseBackupDate(files.at(k)) + ")" , filepath) ;
+                    QString file = files.at(k) ;
+                    QString filepath = backuppath + "/" + file ;
+                    if (searchInFile(file, filepath, searchtext)) {
+                        addString(directory.replace(ENF,"") + ": " + backup.replace(BAK,"").replace(ENB,"") + " (" + parseBackupDate(files.at(k)) + ")" , filepath) ;
                     }
                 }
             }
@@ -115,6 +143,22 @@ int GlobalSearch::exec()
     }
 }
 
+// Used by EasyNotepad
+QString& GlobalSearch::parseBackupDate(QString backupdate)
+{
+    static QString parsedBackupDate ;
+    parsedBackupDate = backupdate ;
+    if (backupdate.length()>=8) {
+        int d, m, y ;
+        y = backupdate.left(4).toInt() ;
+        m = backupdate.mid(4,2).toInt() ;
+        d = backupdate.mid(6,2).toInt() ;
+        QDate date ;
+        date.setDate(y, m, d) ;
+        if (date.isValid()) parsedBackupDate = date.toString("dd MMM yyyy") ;
+    }
+    return parsedBackupDate ;
+}
 
 //
 // Private Slots
@@ -139,12 +183,6 @@ void GlobalSearch::clearResults()
     entries = 0 ;
 }
 
-void GlobalSearch::addString(QString resulttext, QString resulthint)
-{
-    strings.addString(resulttext, resulthint) ;
-    entries++ ;
-}
-
 
 bool GlobalSearch::searchInFile(QString filename, QString filepath, QString text)
 {
@@ -162,13 +200,9 @@ bool GlobalSearch::searchInFile(QString filename, QString filepath, QString text
 
     if (re.exactMatch(testfile)) return true ;
 
-    QFile file(filepath);
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-        return false;
-    QTextStream in(&file);
-    in.setCodec("UTF-8") ;
-    QString filetext = in.readAll();
-    file.close() ;
+    QString filetext ;
+
+    if (!importfilter->LoadFile(filepath, filetext)) return false ;
 
     filetext.replace("\n", "") ;
     filetext.replace("\r", "") ;

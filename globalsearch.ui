@@ -17,7 +17,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>Contact Manager - Search Results</string>
+   <string>Easy Notepad - Search Results</string>
   </property>
   <property name="windowIcon">
    <iconset resource="Icon.qrc">

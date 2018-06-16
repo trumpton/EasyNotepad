@@ -16,12 +16,20 @@ FileSelect::~FileSelect()
     delete ui;
 }
 
-int FileSelect::exec()
+FileSelect::InputType FileSelect::execDialog()
 {
     ui->fileSelect->setFocus() ;
     ui->fileSelect->setFilename() ;
-    ui->fileSelect->update() ;
-    return QDialog::exec() ;
+    if (QDialog::exec()==0) return FileSelect::Cancel ;
+    if (ui->fileSelect->isRenameFolder()) return FileSelect::RenameFolder ;
+    if (ui->fileSelect->isDeleteFolder()) return FileSelect::DeleteFolder ;
+    if (ui->fileSelect->isCreateFolder()) return FileSelect::CreateFolder ;
+    if (ui->fileSelect->isCreateEncryptedFolder()) return FileSelect::CreateEncryptedFolder ;
+    if (ui->fileSelect->isCreateFile()) {
+        if (ui->fileSelect->isFolderEncrypted()) return FileSelect::CreateEncryptedFile ;
+        else return FileSelect::CreateFile ;
+    }
+    return FileSelect::LoadFile ;
 }
 
 void FileSelect::setPath(QString path)
@@ -56,6 +64,7 @@ QString& FileSelect::getFilePath(QString filename, bool preferbackups)
     return ui->fileSelect->getFilePath(filename, preferbackups) ;
 }
 
+
 QString& FileSelect::getEditableFilePath(QString filename)
 {
     return ui->fileSelect->getEditableFilePath(filename) ;
@@ -81,9 +90,9 @@ QString& FileSelect::getTempFolderPath()
     return ui->fileSelect->getTempFolderPath() ;
 }
 
-QString& FileSelect::getFileName(bool includefolder, bool includebackupdate)
+QString& FileSelect::getFileDescription(bool includefolder, bool includebackupdate)
 {
-    return ui->fileSelect->getFileName(includefolder, includebackupdate) ;
+    return ui->fileSelect->getFileDescription(includefolder, includebackupdate) ;
 }
 
 QString FileSelect::getFileDate()
@@ -99,22 +108,12 @@ bool FileSelect::isReadOnly()
     return ui->fileSelect->isBackup() ;
 }
 
-bool FileSelect::isCreateFolder()
+bool FileSelect::isFolderEncrypted()
 {
-    return ui->fileSelect->isCreateFolder() ;
+    return ui->fileSelect->isFolderEncrypted() ;
 }
 
-bool FileSelect::isRenameFolder()
+bool FileSelect::isFileEncrypted()
 {
-    return ui->fileSelect->isRenameFolder() ;
-}
-
-bool FileSelect::isCreateFile()
-{
-    return ui->fileSelect->isCreateFile() ;
-}
-
-bool FileSelect::isDeleteFolder()
-{
-    return ui->fileSelect->isDeleteFolder() ;
+    return ui->fileSelect->isFileEncrypted() ;
 }

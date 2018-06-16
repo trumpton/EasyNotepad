@@ -31,7 +31,9 @@ SOURCES += main.cpp\
     importfilter.cpp \
     ../Lib/alertsound.cpp \
     ../Lib/iniconfig.cpp \
-    formatselect.cpp
+    formatselect.cpp \
+    encryption.cpp \
+    ../Lib/aes.cpp
 
 HEADERS  += mainwindow.h \
     filenavigator.h \
@@ -50,7 +52,9 @@ HEADERS  += mainwindow.h \
     importfilter.h \
     ../Lib/alertsound.h \
     ../Lib/iniconfig.h \
-    formatselect.h
+    formatselect.h \
+    encryption.h \
+    ../Lib/aes.h
 
 FORMS    += mainwindow.ui \
     fileselect.ui \
@@ -60,7 +64,8 @@ FORMS    += mainwindow.ui \
     globalsearch.ui \
     ../Lib/itemselect.ui \
     help.ui \
-    formatselect.ui
+    formatselect.ui \
+    encryption.ui
 
 RESOURCES += \
     Icon.qrc

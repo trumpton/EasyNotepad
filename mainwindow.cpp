@@ -14,6 +14,7 @@
 #include <QProcess>
 #include <QStringList>
 #include <QTextDocumentFragment>
+#include <QLabel>
 
 #include "globalsearch.h"
 #include "filetypes.h"
@@ -44,8 +45,35 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    // Add Statusbar widgets
+    QStatusBar * status_bar = statusBar();
+
+    encryptedlabel = new QLabel("", status_bar);
+    QPixmap encryptedpixmap(QPixmap(":/encrypted-file.png"));
+    encryptedlabel->setPixmap(encryptedpixmap);
+    encryptedlabel->setToolTip(tr("Encrypted File"));
+    status_bar->addWidget(encryptedlabel);
+    encryptedlabel->setVisible(false) ;
+
+    readonlylabel = new QLabel("", status_bar);
+    QPixmap readonlypixmap(QPixmap(":/read-only.png"));
+    readonlylabel->setPixmap(readonlypixmap);
+    readonlylabel->setToolTip(tr("Read-Only File"));
+    status_bar->addWidget(readonlylabel);
+    readonlylabel->setVisible(false) ;
+
+    dirtylabel = new QLabel("", status_bar);
+    QPixmap dirtypixmap(QPixmap(":/file-dirty.png"));
+    dirtylabel->setPixmap(dirtypixmap);
+    dirtylabel->setToolTip(tr("Edited File"));
+    status_bar->addWidget(dirtylabel);
+    dirtylabel->setVisible(false) ;
+
     QTextCodec::setCodecForLocale(QTextCodec::codecForName("UTF-8"));
     ui->textEdit->setReadOnly(true) ;
+
+    // Initialise encryption i/o
+    enc = new Encryption(QString("trumpton.uk"), QString("TextFileEncryption")) ;
 
     // TODO: Reset all vars
     editor=NULL ;
@@ -76,7 +104,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
         emailcommand = ini.get(QString("email"), QString("command")) ;
 
-        ifilter.init(ini, ini.canonicalPath()) ;
+        ifilter.init(ini, ini.canonicalPath(), enc) ;
         databasedir = ini.get(QString("database"), QString("path")) ;
         if (databasedir.isEmpty()) {
             databasedir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation) + QString("/EasyNotepad") ;
@@ -90,6 +118,18 @@ MainWindow::MainWindow(QWidget *parent) :
         gDebugEnabled=false ;
     }
 
+}
+
+
+MainWindow::~MainWindow()
+{
+    Save(true) ;
+    Close() ;
+    if (dirtylabel) delete dirtylabel ;
+    if (readonlylabel) delete readonlylabel ;
+    if (encryptedlabel) delete encryptedlabel ;
+
+    delete ui;
 }
 
 void MainWindow::setPath(QString directory, QString fullpath)
@@ -119,13 +159,6 @@ void MainWindow::setPath(QString directory, QString fullpath)
 }
 
 
-MainWindow::~MainWindow()
-{
-    Save(true) ;
-    Close() ;
-    delete ui;
-}
-
 //
 // File Save and Load
 //
@@ -139,37 +172,65 @@ bool MainWindow::Save(bool ask, bool force)
     // If the file is read-only / importable, don't need to save
     if (isimportable) return true ;
 
-    // No save necessary, just return
-    if (newbuffer.compare(buffer)==0) return true ;
+    // No save necessary, clear dirty flag if set and return
+    if (!force && newbuffer.compare(buffer)==0) {
+        dirtylabel->setVisible(false) ;
+        return true ;
+    }
 
     // TODO: Replace with Yes/No/Cancel (return false on cancel, set dosave=false on no
     if (ask && !warningYesNoDialog(this,
           "EasyNote Save?",
-           "The File \"" + fs.getFileName(true, false) + "\" has changed. Do you wish to save?")) {
+           "The File \"" + fs.getFileDescription(true, false) + "\" has changed. Do you wish to save?")) {
        dosave=false ;
     }
 
+
     if (dosave || force) {
+
+        QTextCodec *codec = QTextCodec::codecForName("UTF-8");
+        QTextEncoder *encoderWithoutBom = codec->makeEncoder( QTextCodec::IgnoreHeader );
+        QByteArray bytes  = encoderWithoutBom ->fromUnicode( newbuffer );
 
         QString directory = fs.getFolderPath() ;
         if (!QDir(directory).exists()) QDir().mkdir(directory) ;
 
         // Save file
-        QString filename = fs.getFilePath() ;
-        if (!writeToFile(filename, newbuffer)) {
-            success=false ;
+        QString filepath = fs.getFilePath() ;
+        if (fs.isFolderEncrypted()) {
+            if (!enc->loggedIn()) {
+                enc->login() ;
+            }
+            if (!enc->loggedIn()) {
+                success=false ;
+            } else {
+                if (!enc->save(filepath, bytes)) {
+                    success=false ;
+                }
+            }
+        } else {
+            if (!writeToFile(filepath, bytes)) {
+                success=false ;
+            }
         }
 
         QString backupdirectory = fs.getBackupFolderPath() ;
         if (!QDir(backupdirectory).exists()) QDir().mkdir(backupdirectory) ;
 
         // Save Backup
-        QString backupfilename = fs.getBackupFilePath() ;
-        if (!writeToFile(backupfilename, newbuffer)) {
-            success=false ;
+        QString backupfilepath = fs.getBackupFilePath() ;
+        if (fs.isFolderEncrypted()) {
+            if (!enc->save(backupfilepath, bytes)) {
+                success=false ;
+            }
+        } else {
+            if (!writeToFile(backupfilepath, bytes)) {
+                success=false ;
+            }
         }
 
         if (success) {
+            dirtylabel->setVisible(false) ;
             play(FileSave) ;
             buffer = newbuffer ;
         } else {
@@ -202,12 +263,15 @@ bool MainWindow::Close()
     ui->actionRename_File->setEnabled(false) ;
     ui->action_Move_File->setEnabled(false) ;
     ui->textEdit->setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard) ;
+    encryptedlabel->setVisible(false) ;
+    readonlylabel->setVisible(false) ;
+    dirtylabel->setVisible(false) ;
     return true ;
 }
 
 bool MainWindow::Load(QString path)
 {
-    QString filename, description ;
+    QString filepath, description ;
     bool isreadonly=true ;
     bool isdeleted=false ;
     isimportable=false ;
@@ -225,18 +289,22 @@ bool MainWindow::Load(QString path)
             isimportable=true ;
             fs.clearFilename() ;
         } else {
+            // Path is in the EasyNotepad area, so fs will be up-to-date
             if (!fileExists(path)) {
                 // Create File that doesn't exist
-                writeToFile(path, "") ;
+                if (fs.isFolderEncrypted()) {
+                    enc->save(path, QByteArray("")) ;
+                } else {
+                    writeToFile(path, QString("")) ;
+                }
+                // New file created, so update fs
+                fs.setFilenameFromPath(path) ;
             }
-            fs.setFilenameFromPath(path) ;
         }
     }
 
     if (isimportable) {
-        // TODO: check that is should not be path=path.replace(
-        // or even better, use the QT filename class
-        path.replace("\\","/") ;
+        path=path.replace("\\","/") ;
         QRegExp rx("(.*)/([^/]*)") ;
         rx.setMinimal(false) ;
         if (rx.indexIn(path)!=-1) {
@@ -244,13 +312,13 @@ bool MainWindow::Load(QString path)
         } else {
             description = path ;
         }
-        filename = path ;
+        filepath = path ;
         isreadonly = true ;
         isdeleted = false ;
 
     } else {
-        filename = fs.getFilePath() ;
-        description = fs.getFileName(false, false) ;
+        filepath = fs.getFilePath() ;
+        description = fs.getFileDescription(false, true) ;
         isreadonly = fs.isReadOnly() ;
         isdeleted = !fileExists(fs.getEditableFilePath()) ;
 
@@ -258,7 +326,8 @@ bool MainWindow::Load(QString path)
 
     qint64 master ;
 
-    editor = new QSharedMemory("EasyNotepad" + filename);
+    editor = new QSharedMemory("EasyNotepad" + filepath);
+    editor->attach() ;
     master = masterPID(editor) ;
 
     if (master>0) {
@@ -273,7 +342,7 @@ bool MainWindow::Load(QString path)
             // Send QMessage
 #endif
             warningOkDialog(this, "File Already Open",
-                 "The file " + fs.getFileName(false, false) + " is already open, Press Alt-Tab to find it") ;
+                 "The file " + fs.getFileDescription(false, false) + " is already open, Press Alt-Tab to find it") ;
 
         buffer="" ;
         ui->textEdit->setPlainText(buffer) ;
@@ -283,7 +352,7 @@ bool MainWindow::Load(QString path)
 
     } else {
 
-        if (!ifilter.LoadFile(filename, buffer, fs.getPath())) {
+        if (!ifilter.LoadFile(path, buffer, filepath)) {
             errorOkDialog(this, "Easy Notepad - File Open Error", buffer) ;
             buffer="" ;
 
@@ -304,6 +373,7 @@ bool MainWindow::Load(QString path)
                 ui->actionRename_File->setEnabled(false) ;
                 ui->action_Move_File->setEnabled(false) ;
                 ui->textEdit->setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard) ;
+                readonlylabel->setVisible(true) ;
 
             } else {
                 ui->action_Email->setEnabled(true) ;
@@ -312,6 +382,8 @@ bool MainWindow::Load(QString path)
                 ui->actionRename_File->setEnabled(true) ;
                 ui->action_Move_File->setEnabled(true) ;
                 ui->textEdit->setTextInteractionFlags(Qt::TextEditable | Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard) ;
+                readonlylabel->setVisible(false) ;
+
             }
 
             ui->textEdit->setFocus() ;
@@ -326,6 +398,8 @@ bool MainWindow::Load(QString path)
             ui->action_Find->setEnabled(true) ;
             ui->actionFind_Next->setEnabled(true) ;
 
+            // Set Encryption Status Flag
+            encryptedlabel->setVisible(fs.isFileEncrypted()) ;
         }
 
         return true ;
@@ -395,14 +469,27 @@ void MainWindow::on_action_Open_triggered()
     bool cancel=false, finished=false ;
     Save(true) ;
 
+    // Close current file
+    // Because FileSelect doesn't remember path
+    // to current file when cancel or folder/file
+    // operations are selected.
+
+    // Alternatively: Save current path, and attempt to restore it on cancel
+    // on cancel, if file no longer exists, select close.
+
+    Close() ;
+
     do {
         play(Query) ;
-        cancel = (fs.exec()==0) ;
 
-        if (!cancel) {
+        switch (fs.execDialog()) {
 
-            if (fs.isRenameFolder()) {
+            case FileSelect::Cancel: {
+                cancel=true ;
+            }
+            break ;
 
+            case FileSelect::RenameFolder: {
                 bool ok ;
                 QString newFolderName ;
 
@@ -416,6 +503,13 @@ void MainWindow::on_action_Open_triggered()
                 } else {
 
                     QString currentName = fs.getFolderPath() ;
+
+
+                    // If Encrypted, force new name to be also encrypted
+                    if (fs.isFolderEncrypted()) {
+                        newFolderName = newFolderName + ENF ;
+                    }
+
                     QString newName = fs.getFolderPath(newFolderName) ;
 
                     QString currentLower = currentName.toLower() ;
@@ -445,9 +539,10 @@ void MainWindow::on_action_Open_triggered()
                     }
                 }
             }
+            break ;
 
-            else if (fs.isDeleteFolder()) {
-                QString& foldername = fs.getFileName(true, false) ;
+            case FileSelect::DeleteFolder: {
+                QString& foldername = fs.getFileDescription(true, false) ;
                 if (warningYesNoDialog(this, "Warning", "Deleting '" + foldername + "' will cause all backups stored within to be lost.  Do you want to continue?")) {
                     QString& folderpath = fs.getFolderPath() ;
                     QDir dir(folderpath) ;
@@ -469,9 +564,10 @@ void MainWindow::on_action_Open_triggered()
                     }
                 }
             }
+            break ;
 
-            else if (fs.isCreateFolder()) {
 
+            case FileSelect::CreateFolder: {
                 bool ok ;
                 QString foldername ;
                 foldername = inputDialog(this, tr("Create Folder"),  tr("Enter Name of Folder to Create"), QLineEdit::Normal, foldername, &ok) ;
@@ -482,14 +578,31 @@ void MainWindow::on_action_Open_triggered()
                     fs.setFilename(foldername) ;
                 }
             }
+            break ;
 
-            else if (fs.isCreateFile()) {
+            case FileSelect::CreateEncryptedFolder: {
+                bool ok ;
+                QString foldername ;
+                foldername = inputDialog(this, tr("Create Folder"),  tr("Enter Name of Folder to Create"), QLineEdit::Normal, foldername, &ok) ;
+                if (ok) {
+                    QDir dir ;
+                    foldername = foldername + ENF ;
+                    QString& folderpath = fs.getFolderPath(foldername) ;
+                    dir.mkpath(folderpath) ;
+                    fs.setFilename(foldername) ;
+                }
+            }
+            break ;
 
+
+            case FileSelect::CreateFile:
+            case FileSelect::CreateEncryptedFile: {
                 bool ok ;
                 QString filename ;
                 filename = inputDialog(this, tr("Create File"),  tr("Enter Name of File to Create"), QLineEdit::Normal, filename, &ok) ;
                 if (ok) {
 
+                    // Get the path to the new file
                     QString& filepath = fs.getFilePath(filename) ;
 
                     // File exists, so do nothing
@@ -499,32 +612,36 @@ void MainWindow::on_action_Open_triggered()
                     } else {
 
                         // Create a dummmy file
-                        writeToFile(filepath, "") ;
-                        fs.setFilename("", filename) ;
+                        if (fs.isFolderEncrypted()) {
+                            enc->save(filepath, QByteArray("")) ;
+                        } else {
+                            writeToFile(filepath, QString("")) ;
+                        }
+
+                        fs.setFilenameFromPath(filepath) ;
 
                         // If a backup exists, copy the latest into the dummy file
                         QString& latestbackuppath = fs.getBackupFilePath(false) ;
                         if (!latestbackuppath.isEmpty()) {
-                            warningOkDialog(this, "Restoring Deleted File", "A Deleted Version of this file has been found and restored.\nControl-A, then Delete will select all and delete all contents.") ;
+                            warningOkDialog(this, "Restoring Deleted File", "A Deleted Version of this file has been found.  If you wish to load the previous contents, please select the backup.") ;
                             copyFile(latestbackuppath, filepath) ;
-                        } else {
-                            if (Load(filepath)) {
-                                play(FileOpen) ;
-                                Save(false, true) ;
-                            }
                         }
                     }
                 }
             }
+            break ;
 
-            else {
-
+            case FileSelect::LoadFile:
+            case FileSelect::LoadBackup: {
                 QString& filepath = fs.getFilePath() ;
                 if (Load(filepath)) play(FileOpen) ;
+                dirtylabel->setVisible(false) ;
                 finished=true ;
             }
+            break ;
 
         }
+
     } while (!finished && !cancel) ;
 }
 
@@ -603,13 +720,17 @@ void MainWindow::on_actionFind_Global_triggered()
     searchtext = inputDialog(this, tr("Find Global"),  tr("Find Globally"), QLineEdit::Normal, searchtext, &ok) ;
     if (ok) {
         GlobalSearch search ;
-        search.setSearch(fs.getPath(), true, searchtext);
+        search.setSearch(&ifilter, fs.getPath(), true, searchtext);
         if (search.exec()) {
             filepath = search.getSelection() ;
             filename = search.getSelectionFileName() ;
         }
         if (!filepath.isEmpty()) {
-            if (Save(true)) Load(filepath) ;
+            if (Save(true)) {
+                fs.setFilenameFromPath(filepath) ;
+                if (Load(filepath)) play(FileOpen) ;
+                dirtylabel->setVisible(false) ;
+            }
         } else {
             warningOkDialog(this, "", "No Match Found.  Use the Old search, Control-Shift-G to include deleted files.") ;
         }
@@ -625,13 +746,17 @@ void MainWindow::on_actionFind_Old_triggered()
     searchtext = inputDialog(this, tr("Find Old Files"),  tr("Find Old Files"), QLineEdit::Normal, searchtext, &ok) ;
     if (ok) {
         GlobalSearch search ;
-        search.setSearch(fs.getPath(), false, searchtext);
+        search.setSearch(&ifilter, fs.getPath(), false, searchtext);
         if (search.exec()) {
             filepath = search.getSelection() ;
             filename = search.getSelectionFileName() ;
         }
         if (!filepath.isEmpty()) {
-            if (Save(true)) Load(filepath) ;
+            if (Save(true)) {
+                fs.setFilenameFromPath(filepath) ;
+                if (Load(filepath)) play(FileOpen) ;
+                dirtylabel->setVisible(false) ;
+            }
         } else {
             warningOkDialog(this, "", "No Match Found.") ;
         }
@@ -642,7 +767,7 @@ void MainWindow::on_actionFind_Old_triggered()
 void MainWindow::on_action_Delete_triggered()
 {
     if (warningYesNoDialog(this, "EasyNote Delete?",
-               "Do you want to delete \"" + fs.getFileName(true, false) + "\"?")) {
+               "Do you want to delete \"" + fs.getFileDescription(true, false) + "\"?")) {
 
         Save(false, true) ;
         QFile::remove(fs.getFilePath()) ;
@@ -735,7 +860,8 @@ void MainWindow::on_action_Insert_Template_triggered()
 
     if (parseDirectory(templatepath, filenames, TXT)) {
         for (int i=0, sz=filenames.size(); i<sz; i++) {
-            list.addEntry(filenames.at(i), templatepath + "/" + filenames.at(i) + "." + TXT) ;
+            QString filename = filenames.at(i) ;
+            list.addEntry(filename.replace(TXT,"").replace(ENC,""), templatepath + "/" + filenames.at(i)) ;
         }
     }
 
@@ -748,9 +874,10 @@ void MainWindow::on_action_Insert_Template_triggered()
     if (list.exec()) {
         QString filedata ;
 
+        // TODO: Currently, templates cannot be encrypted
         if (!list.getData().isEmpty() && readFromFile(list.getData(), filedata, "UTF-8")) {
 
-            QString filename = fs.getFileName(true, false) ;
+            QString filename = fs.getFileDescription(true, false) ;
             QString folder = filename ;
             QDateTime datetime = QDateTime::currentDateTime() ;
 
@@ -773,6 +900,7 @@ void MainWindow::on_action_Insert_Template_triggered()
 
             int pos = cursor.position() ;
             ui->textEdit->insertPlainText(filedata) ;
+            dirtylabel->setVisible(true) ;
             cursor.setPosition(pos) ;
             ui->textEdit->setTextCursor(cursor) ;
 
@@ -812,12 +940,12 @@ void MainWindow::on_action_Email_triggered()
        "Do you want to save and send this file as an email attachment?")) {
 
        QString now = QDateTime::currentDateTimeUtc().toLocalTime().toString("yyMMdd-hhmmss_") ;
-       QString forwarded = fs.getTempFolderPath() + "/" + now + fs.getFileName(false, false) + ".txt" ;
+       QString forwarded = fs.getTempFolderPath() + "/" + now + fs.getFileDescription(false, false) + ".txt" ;
        writeToFile(forwarded, selection) ;
 
        // thunderbird -compose "to='john@example.com,kathy@example.com',cc='britney@example.com',subject='dinner',body='How about dinner tonight?',attachment='file://C:\temp\info.doc,file://C:\temp\food.doc'"
        cmd = cmd.replace("$FILEPATH", forwarded) ;
-       cmd = cmd.replace("$FILENAME", fs.getFileName(false, false)) ;
+       cmd = cmd.replace("$FILENAME", fs.getFileDescription(false, false)) ;
 
        QProcess *myProcess = new QProcess(NULL) ;
        QStringList args = cmd.split( QRegExp(" (?=[^\"]*(\"[^\"]*\"[^\"]*)*$)") );
@@ -848,4 +976,25 @@ void MainWindow::on_action_Email_triggered()
 void MainWindow::on_action_About_triggered()
 {
     warningOkDialog(this, QString("About Easy Notepad"), QString("Easy Notepad, Version: ") + QString(ENVERSION)) ;
+}
+
+
+void MainWindow::on_actionSet_Encryption_Key_triggered()
+{
+    enc->setKey() ;
+}
+
+void MainWindow::on_actionChange_Password_triggered()
+{
+    enc->changePassword();
+}
+
+void MainWindow::on_action_Logout_triggered()
+{
+    if (enc->loggedIn()) enc->logout() ;
+}
+
+void MainWindow::on_textEdit_textChanged()
+{
+    dirtylabel->setVisible(true) ;
 }

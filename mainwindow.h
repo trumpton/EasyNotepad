@@ -3,11 +3,13 @@
 
 #include <QMainWindow>
 #include <QSharedMemory>
+#include <QLabel>
 #include "importfilter.h"
 #include "fileselect.h"
 #include "search.h"
 #include "help.h"
 #include "../Lib/iniconfig.h"
+#include "encryption.h"
 
 namespace Ui {
 class MainWindow;
@@ -21,11 +23,12 @@ class MainWindow : public QMainWindow
 
 public:
     explicit MainWindow(QWidget *parent = 0);
-    void setPath(QString directory = QString(""), QString fullpath = QString("")) ;
     ~MainWindow();
 
-private:
+public:
+    void setPath(QString directory = QString(""), QString fullpath = QString("")) ;
 
+private:
     bool Close() ;
     bool Save(bool ask=false, bool force=false) ;
     bool Load(QString filepath = QString("")) ;
@@ -35,7 +38,6 @@ private:
     void msg(QString msg) ;
 
 private slots:
-
     void on_action_Open_triggered();
     void on_action_Save_triggered();
     void on_action_Find_triggered();
@@ -50,8 +52,15 @@ private slots:
     void on_action_Help_triggered();
     void on_action_Email_triggered();
     void on_action_About_triggered();
+    void on_actionSet_Encryption_Key_triggered();
+    void on_actionChange_Password_triggered();
+
+    void on_action_Logout_triggered();
+
+    void on_textEdit_textChanged();
 
 private:
+    Encryption *enc;
     bool debugenabled ;
     QString databasedir ;
     ImportFilter ifilter ;
@@ -63,6 +72,7 @@ private:
     Ui::MainWindow *ui;
     Help help ;
     bool isimportable ;
+    QLabel *readonlylabel, *encryptedlabel, *dirtylabel ;
 };
 
 #endif // MAINWINDOW_H

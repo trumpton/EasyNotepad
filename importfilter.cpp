@@ -11,6 +11,8 @@
 #include "../Lib/supportfunctions.h"
 #include "../Lib/iniconfig.h"
 #include "formatselect.h"
+#include "filetypes.h"
+
 
 extern bool gDebugEnabled ;
 
@@ -57,15 +59,23 @@ ImportFilter::ImportFilter()
     conf.clear() ;
 
     Record x("", "", "") ;
-    Record n("txt", "UTF-8", "-") ;
-    Record b("bak", "UTF-8", "-") ;
+    Record n(TXT.replace(".",""), "UTF-8", "-") ;
+    Record e(ENC.replace(".",""), "UTF-8", "Z") ;
+    Record b(BAK.replace(".",""), "UTF-8", "-") ;
+    Record z(ENB.replace(".",""), "UTF-8", "Z") ;
     conf.append(x) ;
     conf.append(n) ;
+    conf.append(e) ;
     conf.append(b) ;
+    conf.append(z) ;
+    enc=NULL ;
 }
 
-bool ImportFilter::init(IniConfig ini, QString inipath)
+bool ImportFilter::init(IniConfig ini, QString inipath, Encryption *enc)
 {
+    // Save Encryption
+    this->enc = enc ;
+
     // Initialise import filter and Codec Dialog filter
     int numentries = ini.numSections() ;
     codecSelectDialog.addItem(" System Default Text Format ", "System") ;
@@ -108,6 +118,30 @@ bool ImportFilter::LoadFile(QString filename, QString& contents, QString datadir
     QString codec = filter.codec() ;
 
     contents = "" ;
+
+    if (command.compare("Z")==0 && enc) {
+
+        // Open the Encrypted UTF-8 File
+        if (!enc->loggedIn()) {
+            enc->login() ;
+        }
+        if (!enc->loggedIn()) {
+            contents = "Unable to login.  Please check your login password\n" ;
+            return false ;
+        }
+
+        QByteArray text ;
+        if (!enc->load(filename, text)) {
+            contents = "Error loading file.  Did you have the correct password and key\n" ;
+            return false ;
+        } else {
+            QTextCodec *codec = QTextCodec::codecForName("UTF-8");
+            QTextDecoder *decoderWithoutBom = codec->makeDecoder( QTextCodec::IgnoreHeader ) ;
+            contents = decoderWithoutBom->toUnicode(text) ;
+            return true ;
+        }
+
+    }
 
     if (command.compare("-")==0) {
 
@@ -153,9 +187,6 @@ bool ImportFilter::LoadFile(QString filename, QString& contents, QString datadir
 
         // Run Program to Filter Input
         command = ExpandVars(command, filename, datadir) ;
-
-        // TODO: Search for Libre Office
-        // command.replace("$DIRLIBREOFFICE", filename) ;
 
         QProcess myProcess ;
         QStringList args = command.split( QRegExp(" (?=[^\"]*(\"[^\"]*\"[^\"]*)*$)") );

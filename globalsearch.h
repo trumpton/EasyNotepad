@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QStringList>
 #include "listviewstrings.h"
+#include "importfilter.h"
 
 namespace Ui {
 class Search;
@@ -24,12 +25,19 @@ private:
     int selectedindex ;
     int entries ;
 
+    ImportFilter *importfilter ;
+
+
+    QString& parseBackupDate(QString backupdate) ;
+
+
 
 public:
     explicit GlobalSearch(QWidget *parent = 0);
     ~GlobalSearch();
 
-    void setSearch(QString& path, bool searchcurrent, QString& searchtext) ;
+
+    void setSearch(ImportFilter *importfilter, QString& path, bool searchcurrent, QString& searchtext) ;
     int exec() ;
     QString& getSelection() ;
     QString& getSelectionFileName() ;
