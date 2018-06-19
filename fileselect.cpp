@@ -27,7 +27,7 @@ FileSelect::InputType FileSelect::execDialog()
     if (ui->fileSelect->isCreateEncryptedFolder()) return FileSelect::CreateEncryptedFolder ;
     if (ui->fileSelect->isCreateFile()) {
         if (ui->fileSelect->isFolderEncrypted()) return FileSelect::CreateEncryptedFile ;
-        else return FileSelect::CreateFile ;
+        else return FileSelect::CreateAFile ;
     }
     return FileSelect::LoadFile ;
 }

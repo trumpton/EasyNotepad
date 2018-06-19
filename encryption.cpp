@@ -13,6 +13,10 @@
 #define HALFHASHB 32
 #define BLOCKSIZE 16
 
+#ifdef _MSC_VER
+#define random() rand()
+#endif
+
 //
 // Shared Memory Data
 //
@@ -255,7 +259,7 @@ void Encryption::changePassword()
             // Calculate and Check Old Password
             QByteArray hashOldPassword = QCryptographicHash::hash(ui->lineEdit0->text().toLocal8Bit(), HASHALG);
             for (int i=0; i<HALFHASHB; i++) {
-                if (hashOldPassword[i+HALFHASHB]!=shm->passwordhash[i]) {
+                if ((unsigned char)hashOldPassword[i+HALFHASHB]!=shm->passwordhash[i]) {
                     sharedmem.unlock() ;
                     // Invalid Old Password
                     QMessageBox::critical(this, "Change Password", "Old Password incorrect, update aborted", QMessageBox::Ok) ;
@@ -336,7 +340,7 @@ void Encryption::login()
 
             // Check Password
             for (int i=0; i<HALFHASHB; i++) {
-                if (hashPass[i+HALFHASHB]!=shm->passwordhash[i]) {
+                if ((unsigned char)hashPass[i+HALFHASHB]!=shm->passwordhash[i]) {
                     // Error, unable to login
                     shm->plaintextkeypresent=false ;
                     sharedmem.unlock() ;
@@ -473,7 +477,8 @@ bool Encryption::load(QString filename, QByteArray &data)
             }
 
             for (int i=0; i<BLOCKSIZE; i++) {
-                data = data + (unsigned char) (buf[i] ^ outputbuf[i]) ;
+                unsigned char ch = (buf[i] ^ outputbuf[i]) ;
+                data.append(ch) ;
             }
 
             pos+=16 ;
@@ -499,7 +504,7 @@ bool Encryption::load(QString filename, QByteArray &data)
         QByteArray dochash = QCryptographicHash::hash(data, HASHALG);
         for (int i=0; i<BLOCKSIZE; i++) {
             unsigned char recoveredhash = (outputbuf[i] ^ buf[i]) ;
-            if (dochash[i] != recoveredhash) {
+            if ((unsigned char)dochash[i] != recoveredhash) {
                 file.close() ;
                 sharedmem.unlock() ;
                 return false ;

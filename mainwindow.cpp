@@ -594,9 +594,8 @@ void MainWindow::on_action_Open_triggered()
             }
             break ;
 
-
-            case FileSelect::CreateFile:
-            case FileSelect::CreateEncryptedFile: {
+            case FileSelect::CreateEncryptedFile:
+            case FileSelect::CreateAFile: {
                 bool ok ;
                 QString filename ;
                 filename = inputDialog(this, tr("Create File"),  tr("Enter Name of File to Create"), QLineEdit::Normal, filename, &ok) ;

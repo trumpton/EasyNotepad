@@ -19,7 +19,7 @@ public:
         CreateFolder,
         RenameFolder,
         CreateEncryptedFolder,
-        CreateFile,
+        CreateAFile,
         CreateEncryptedFile,
         LoadFile,
         LoadBackup
