@@ -68,6 +68,7 @@ FORMS    += mainwindow.ui \
     encryption.ui
 
 RESOURCES += \
+    ../Lib/sounds.qrc \
     Icon.qrc
 
 OTHER_FILES +=

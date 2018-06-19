@@ -3,7 +3,6 @@
         <file>icon-image.png</file>
         <file>encrypted-file.png</file>
         <file>read-only.png</file>
-        <file>blank-icon.png</file>
         <file>file-dirty.png</file>
     </qresource>
 </RCC>
