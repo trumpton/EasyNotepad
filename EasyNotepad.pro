@@ -54,7 +54,9 @@ HEADERS  += mainwindow.h \
     ../Lib/iniconfig.h \
     formatselect.h \
     encryption.h \
-    ../Lib/aes.h
+    ../Lib/aes.h \
+    buildinfo.h \
+    version.h
 
 FORMS    += mainwindow.ui \
     fileselect.ui \
