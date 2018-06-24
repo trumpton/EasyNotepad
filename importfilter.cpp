@@ -7,6 +7,7 @@
 #include <QProcess>
 #include <QStandardPaths>
 #include <QApplication>
+#include <QDebug>
 
 #include "../Lib/supportfunctions.h"
 #include "../Lib/iniconfig.h"
@@ -103,15 +104,21 @@ bool ImportFilter::registerTypes()
 {
 #ifdef  Q_OS_WIN
     // Register extension with operating system
-    QString appexe = QApplication::applicationFilePath() ;
-    QSettings settings("HKEY_CURRENT_USER\\Software\\Classes", QSettings::NativeFormat);
-    settings.setValue("com.trumpton.easynotepad\\shell\\open\\command", appexe + QString(" \"%1\"")) ;
+    QString appexe = QApplication::applicationFilePath().replace("/","\\") ;
+
+    QSettings appsettings("HKEY_CURRENT_USER\\Software\\Classes\\EasyNotepad\\shell\\open\\command", QSettings::NativeFormat);
+    appsettings.setValue(".", QString("\"") + appexe + QString("\" \"%1\"")) ;
+
+    QSettings iconsettings("HKEY_CURRENT_USER\\Software\\Classes\\EasyNotepad\\DefaultIcon", QSettings::NativeFormat);
+    iconsettings.setValue(".", QString("\"") + appexe + QString("\"")) ;
+
     for (int i=0; i<conf.size(); i++) {
         // Register extension with operating system
         Record& rec = conf[i] ;
         QString ext = rec.ext() ;
         if (!ext.isEmpty()) {
-            settings.setValue( QString(".")+ext, QString("com.trumpton.easynotepad")) ;
+            QSettings extsettings(QString("HKEY_CURRENT_USER\\Software\\Classes\\.") + ext, QSettings::NativeFormat) ;
+            extsettings.setValue(".", QString("EasyNotepad")) ;
         }
     }
     return true ;
