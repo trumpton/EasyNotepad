@@ -1,8 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#define ENVERSION "2.0"
-
 #include <QDir>
 #include <QFile>
 #include <QTextStream>
@@ -22,6 +20,7 @@
 #include "../Lib/itemselect.h"
 #include "../Lib/alertsound.h"
 #include "../Lib/iniconfig.h"
+#include "buildinfo.h"
 
 #ifdef WIN32
 #include <windows.h>
@@ -974,7 +973,7 @@ void MainWindow::on_action_Email_triggered()
 
 void MainWindow::on_action_About_triggered()
 {
-    warningOkDialog(this, QString("About Easy Notepad"), QString("Easy Notepad, Version: ") + QString(ENVERSION)) ;
+    warningOkDialog(this, QString("About Easy Notepad"), QString("Easy Notepad, Version: ") + QString(BUILDVERSION) + QString(", built on ") + QString(BUILDDATE))  ;
 }
 
 
