@@ -996,3 +996,9 @@ void MainWindow::on_textEdit_textChanged()
 {
     dirtylabel->setVisible(true) ;
 }
+
+void MainWindow::on_action_SetAsDefault_triggered()
+{
+    ifilter.registerTypes();
+    warningOkDialog(this, QString("Easy Notepad"), QString("EasyNotepad has been registered as the default application for its configured types"))  ;
+}

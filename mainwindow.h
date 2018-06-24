@@ -59,6 +59,8 @@ private slots:
 
     void on_textEdit_textChanged();
 
+    void on_action_SetAsDefault_triggered();
+
 private:
     Encryption *enc;
     bool debugenabled ;

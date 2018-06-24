@@ -37,6 +37,7 @@ private:
 public:
     ImportFilter();
     bool init(IniConfig ini, QString inipath, Encryption *enc) ;
+    bool registerTypes() ;
     bool LoadFile(QString filename, QString& contents, QString datadir = QString(".")) ;
 
 

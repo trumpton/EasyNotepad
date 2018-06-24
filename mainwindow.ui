@@ -81,6 +81,8 @@
     <addaction name="separator"/>
     <addaction name="menuKey_and_Password"/>
     <addaction name="separator"/>
+    <addaction name="action_SetAsDefault"/>
+    <addaction name="separator"/>
     <addaction name="actionE_xit"/>
    </widget>
    <widget class="QMenu" name="menu_Search">
@@ -270,6 +272,11 @@
   <action name="action_Logout">
    <property name="text">
     <string>&amp;Logout</string>
+   </property>
+  </action>
+  <action name="action_SetAsDefault">
+   <property name="text">
+    <string>Set as Default for File Types</string>
    </property>
   </action>
  </widget>

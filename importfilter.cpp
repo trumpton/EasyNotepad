@@ -79,6 +79,7 @@ bool ImportFilter::init(IniConfig ini, QString inipath, Encryption *enc)
     // Initialise import filter and Codec Dialog filter
     int numentries = ini.numSections() ;
     codecSelectDialog.addItem(" System Default Text Format ", "System") ;
+
     for (int i=0; i<numentries; i++) {
         QString section = ini.getSection(i) ;
         if (section.left(6).toLower().compare(QString("import"))==0) {
@@ -87,6 +88,7 @@ bool ImportFilter::init(IniConfig ini, QString inipath, Encryption *enc)
             QString cmd = ini.get(section, QString("command")) ;
             Record n(ext, codec, cmd) ;
             conf.append(n) ;
+
         } else if (section.left(4).toLower().compare("load")==0) {
             QString codec = ini.get(section, "codec") ;
             QString description = ini.get(section, "description") ;
@@ -95,6 +97,25 @@ bool ImportFilter::init(IniConfig ini, QString inipath, Encryption *enc)
     }
     this->inipath = inipath ;
     return true ;
+}
+
+bool ImportFilter::registerTypes()
+{
+#ifdef  Q_OS_WIN
+    // Register extension with operating system
+    QString appexe = QApplication::applicationFilePath() ;
+    QSettings settings("HKEY_CURRENT_USER\\Software\\Classes", QSettings::NativeFormat);
+    settings.setValue("com.trumpton.easynotepad\\shell\\open\\command", appexe + QString(" \"%1\"")) ;
+    for (int i=0; i<conf.size(); i++) {
+        // Register extension with operating system
+        Record& rec = conf[i] ;
+        QString ext = rec.ext() ;
+        if (!ext.isEmpty()) {
+            settings.setValue( QString(".")+ext, QString("com.trumpton.easynotepad")) ;
+        }
+    }
+    return true ;
+#endif
 }
 
 Record& ImportFilter::FindFilter(QString filename)
