@@ -55,7 +55,6 @@ HEADERS  += mainwindow.h \
     formatselect.h \
     encryption.h \
     ../Lib/aes.h \
-    buildinfo.h \
     version.h
 
 FORMS    += mainwindow.ui \

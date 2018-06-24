@@ -20,7 +20,7 @@
 #include "../Lib/itemselect.h"
 #include "../Lib/alertsound.h"
 #include "../Lib/iniconfig.h"
-#include "buildinfo.h"
+#include "version.h"
 
 #ifdef WIN32
 #include <windows.h>
