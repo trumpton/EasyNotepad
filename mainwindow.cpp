@@ -973,7 +973,7 @@ void MainWindow::on_action_Email_triggered()
 
 void MainWindow::on_action_About_triggered()
 {
-    warningOkDialog(this, QString("About Easy Notepad"), QString("Easy Notepad, Version: ") + QString(BUILDVERSION) + QString(", built on ") + QString(BUILDDATE))  ;
+    warningOkDialog(this, QString("About Easy Notepad"), QString("This is version " BUILDVERSION " (" BUILDDATE ") of Easy Notepad, and was built on :\n  " COMPILEDATE))  ;
 }
 
 
