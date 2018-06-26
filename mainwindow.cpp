@@ -401,6 +401,7 @@ bool MainWindow::Load(QString path)
             encryptedlabel->setVisible(fs.isFileEncrypted()) ;
         }
 
+        dirtylabel->setVisible(false) ;
         return true ;
 
     }
