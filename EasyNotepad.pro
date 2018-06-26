@@ -32,8 +32,8 @@ SOURCES += main.cpp\
     ../Lib/alertsound.cpp \
     ../Lib/iniconfig.cpp \
     formatselect.cpp \
-    encryption.cpp \
-    ../Lib/aes.cpp
+    ../Lib/aes.cpp \
+    ../Lib/encryption.cpp
 
 HEADERS  += mainwindow.h \
     filenavigator.h \
@@ -53,9 +53,9 @@ HEADERS  += mainwindow.h \
     ../Lib/alertsound.h \
     ../Lib/iniconfig.h \
     formatselect.h \
-    encryption.h \
     ../Lib/aes.h \
-    version.h
+    version.h \
+    ../Lib/encryption.h
 
 FORMS    += mainwindow.ui \
     fileselect.ui \
@@ -66,7 +66,7 @@ FORMS    += mainwindow.ui \
     ../Lib/itemselect.ui \
     help.ui \
     formatselect.ui \
-    encryption.ui
+    ../Lib/encryption.ui
 
 RESOURCES += \
     ../Lib/sounds.qrc \

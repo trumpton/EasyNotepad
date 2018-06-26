@@ -9,7 +9,7 @@
 #include "search.h"
 #include "help.h"
 #include "../Lib/iniconfig.h"
-#include "encryption.h"
+#include "../Lib/encryption.h"
 
 namespace Ui {
 class MainWindow;

@@ -296,9 +296,9 @@ bool MainWindow::Load(QString path)
                 } else {
                     writeToFile(path, QString("")) ;
                 }
-                // New file created, so update fs
-                fs.setFilenameFromPath(path) ;
             }
+            // New file created, so update fs
+            fs.setFilenameFromPath(path) ;
         }
     }
 
