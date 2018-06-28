@@ -8,7 +8,7 @@
 #include "formatselect.h"
 #include "importfilter.h"
 #include "../Lib/iniconfig.h"
-#include "encryption.h"
+#include "../Lib/encryption.h"
 
 
 class Record {
