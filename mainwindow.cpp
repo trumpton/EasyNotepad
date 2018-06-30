@@ -44,6 +44,9 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    // Connect Handlers
+    connect(ui->menuKeyAndPassword, SIGNAL(aboutToShow()), this, SLOT(refreshMenus())) ;
+
     // Add Statusbar widgets
     QStatusBar * status_bar = statusBar();
 
@@ -382,7 +385,6 @@ bool MainWindow::Load(QString path)
                 ui->action_Move_File->setEnabled(true) ;
                 ui->textEdit->setTextInteractionFlags(Qt::TextEditable | Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard) ;
                 readonlylabel->setVisible(false) ;
-
             }
 
             ui->textEdit->setFocus() ;
@@ -404,6 +406,20 @@ bool MainWindow::Load(QString path)
         dirtylabel->setVisible(false) ;
         return true ;
 
+    }
+
+}
+
+void MainWindow::refreshMenus()
+{
+    if (enc->loggedIn()) {
+        ui->actionChange_Password->setEnabled(false) ;
+        ui->actionSet_Encryption_Key->setEnabled(false) ;
+        ui->action_Logout->setEnabled(true) ;
+    } else {
+        ui->actionChange_Password->setEnabled(true) ;
+        ui->actionSet_Encryption_Key->setEnabled(true) ;
+        ui->action_Logout->setEnabled(false) ;
     }
 
 }

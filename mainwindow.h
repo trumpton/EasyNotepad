@@ -54,6 +54,8 @@ private slots:
     void on_action_About_triggered();
     void on_actionSet_Encryption_Key_triggered();
     void on_actionChange_Password_triggered();
+    void refreshMenus() ;
+
 
     void on_action_Logout_triggered();
 

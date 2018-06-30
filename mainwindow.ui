@@ -62,7 +62,7 @@
     <property name="title">
      <string>&amp;File</string>
     </property>
-    <widget class="QMenu" name="menuKey_and_Password">
+    <widget class="QMenu" name="menuKeyAndPassword">
      <property name="title">
       <string>Key and Password</string>
      </property>
@@ -79,7 +79,7 @@
     <addaction name="action_Delete"/>
     <addaction name="action_Undelete"/>
     <addaction name="separator"/>
-    <addaction name="menuKey_and_Password"/>
+    <addaction name="menuKeyAndPassword"/>
     <addaction name="separator"/>
     <addaction name="action_SetAsDefault"/>
     <addaction name="separator"/>
@@ -266,7 +266,7 @@
   </action>
   <action name="actionChange_Password">
    <property name="text">
-    <string>Change Password</string>
+    <string>Change &amp;Password</string>
    </property>
   </action>
   <action name="action_Logout">

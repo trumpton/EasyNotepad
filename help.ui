@@ -39,10 +39,13 @@
 &gt;&gt; 2.1. FILE MENU - ALT-F
   Open / Create File / Folder
   Save Current File
+  Attach as Email
   Rename Current File
   Move Current File
   Delete Current File
   Undelete Current Backup
+  Key and Password
+  Set File Types as Defailt
 
 &gt;&gt; 2.2. SEARCH MENU (ALt-S)
   Find First
@@ -86,13 +89,22 @@
 &gt;&gt; 5. USING FORWARD SELECTION AS EMAIL
   Selecting Text, and pressing Control-L will cause the current selection to be written to a temporary file, and the chosen email package launched with the file attached.
 
-&gt;&gt; 6. COMMAND LINE OPTIONS
+&gt;&gt; 6. MANAGING ENCRYPTION
+  It is possible to store files in encrypted form.  Encrypted files are stored in an encrypted folder.  Folders are identified as 'encrypted' when they are created from the 'Open' menu.
+  Unless an encryption key is set, it is not possible to create encrypted files.
+  All files are encrypted with the same key - this should be a large string or phrase.
+  The key itself is protected with a password (which can be changed).
+  The first password is set when the key is created, so if the password is forgotten, simply re-create the same key.
+  For convenience, the password can be stored so that logins are not required.  In this case, the files are still encrypted with the complex key, however, the password and mechanism to recover the key are also stored on the system somewhere.
+  If you select 'logout', the stored password is removed, and the password must be re-enetered on login.
+
+&gt;&gt; 7. COMMAND LINE OPTIONS
   Launching Easy Notepad from the command line with no arguments will open the program read-only, with no file loaded.
   If a file is specified on the command line, it is opened.
   If the file exists in the EasyNotepad database (as specified in the ini file), it is opened writable, just as if it had been opened with Control-O.
   If the file does not exist in the EasyNotepad database (i.e. somewhere else in the filesystem), it is opened read-only.
 
-&gt;&gt; 7. SETTINGS
+&gt;&gt; 8. SETTINGS
 
   The settings are stored in an EasyNotepad.ini file, which is located in the EasyNotepad data folder or TrumptonApps folder  in the user's home directory, or the application directory.  The settings file has a number of sections:
     [database] - This contains details of the database (e.g. location)
@@ -100,13 +112,13 @@
     [import..] - These sections list the commands required to import and parse files  in other formats (e.g. doc and xls).
     [load...] - These sections contain the Codecs that are offered when loading a file which is not in a recognised format (e.g. ISO8859-15).
 
-&gt;&gt; 7.1. DATABASE SETTINGS
+&gt;&gt; 8.1. DATABASE SETTINGS
   The [database] section contans a single entry: 'path'. Thus path may contain a number of macros as follows.
     $HOME - User's Home Directory
     $CONFIG - Directory EasyNotepad.ini was loaded from
   If not supplied, $HOME/EasyNotepad is used.
 
-&gt;&gt; 7.2. EMAIL SETTINGS
+&gt;&gt; 8.2. EMAIL SETTINGS
   The [email] section contains a single entry: command.  This command can contain a number of macros as follows:
     $HOME - User's Home Directory
     $CONFIG - This is the $HOME/TrumptonApps directory
@@ -117,7 +129,7 @@
   Note that the entire entry must be quoted, and separate entries on the command line must be escape-quoted, e.g.
     command=&quot;\&quot;c:\Program Files\Email.exe\&quot; -option \&quot;$FILEPATH\&quot;&quot;
 
-&gt;&gt; 7.3. FILE IMPORT SETTINGS
+&gt;&gt; 8.3. FILE IMPORT SETTINGS
   The [import...] sections contain three entries: extension, codec and command.  When files of 'extension' are opened, the 'command' is run, and whatever is passed to stdout is imported into EasyNotepad using 'codec'.  The command contain a number of macros, as follows:
     $HOME - User's Home Directory
     $CONFIG - This is the $HOME/TrumptonApps directory
@@ -127,12 +139,12 @@
   Note that the entire entry must be quoted, and separate entries on the command line must be escape-quoted, e.g.
     command=&quot;\&quot;c:/Program Files/ParseFile.exe\&quot; --doc --stdout \&quot;$FILEPATH\&quot;&quot;
 
-&gt;&gt; 7.4. FILE OPEN SETTINGS
+&gt;&gt; 8.4. FILE OPEN SETTINGS
   The [load...] section contains two entries: codec and description.  When files are opened (not imported), and they contain unrecognised characters, a prompt is presented asking which codec to use in order to interpret the file.  
   The list of codecs is given in the [load...] sections.  Note that the codec is not case sensitive, but must match exactly the format of the codecs understood by QT applications.  
   A special codec called 'System' is automatically inserted into the list of codecs, and this maps to the default system codec (for example it would be UTF-8 on Linux, and would be WIndows-1252 on a UK Windows machine).  
 
-&gt;&gt;7.5. INI FILE EXAMPLE
+&gt;&gt;8.5. INI FILE EXAMPLE
 
 Notes:
   Lines with spaces should be quoted
