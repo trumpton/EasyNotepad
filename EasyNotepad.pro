@@ -33,7 +33,8 @@ SOURCES += main.cpp\
     ../Lib/iniconfig.cpp \
     formatselect.cpp \
     ../Lib/aes.cpp \
-    ../Lib/encryption.cpp
+    ../Lib/encryption.cpp \
+    ../Lib/safelineedit.cpp
 
 HEADERS  += mainwindow.h \
     filenavigator.h \
@@ -55,7 +56,8 @@ HEADERS  += mainwindow.h \
     formatselect.h \
     ../Lib/aes.h \
     version.h \
-    ../Lib/encryption.h
+    ../Lib/encryption.h \
+    ../Lib/safelineedit.h
 
 FORMS    += mainwindow.ui \
     fileselect.ui \

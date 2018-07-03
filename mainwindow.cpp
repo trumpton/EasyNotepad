@@ -832,7 +832,7 @@ void MainWindow::on_actionRename_File_triggered()
             if (!confirm) {
                 dorename=false ;
             } else {
-                if (!deleteDirectoryAndFiles(newBackup, BAK)) {
+                if (!deleteDirectoryAndFiles(newBackup, ENB)) {
                         warningOkDialog(this, "Error", "Unable to remove backup for " + newFileName + " - you must do it manually") ;
                         dorename=false ;
                 }
