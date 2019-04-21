@@ -44,6 +44,10 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    // Fix Accessible Name
+    QString accessibleDescription = this->accessibleDescription() ;
+    QString accessibleName = this->accessibleName() ;
+
     // Connect Handlers
     connect(ui->menuKeyAndPassword, SIGNAL(aboutToShow()), this, SLOT(refreshMenus())) ;
 

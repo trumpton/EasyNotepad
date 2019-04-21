@@ -27,7 +27,7 @@
    <string>Easy Notepad</string>
   </property>
   <property name="accessibleDescription">
-   <string>Easy Notepad</string>
+   <string>Easy Notepad.</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QHBoxLayout" name="horizontalLayout">
