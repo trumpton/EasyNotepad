@@ -72,7 +72,7 @@ ImportFilter::ImportFilter()
     enc=NULL ;
 }
 
-bool ImportFilter::init(IniConfig ini, QString inipath, Encryption *enc)
+bool ImportFilter::init(IniConfig& ini, QString inipath, Encryption *enc)
 {
     // Save Encryption
     this->enc = enc ;

@@ -44,6 +44,12 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    enc=NULL ;
+    editor=NULL ;
+    readonlylabel=NULL ;
+    encryptedlabel=NULL ;
+    dirtylabel=NULL ;
+
     // Fix Accessible Name
     QString accessibleDescription = this->accessibleDescription() ;
     QString accessibleName = this->accessibleName() ;
@@ -81,9 +87,6 @@ MainWindow::MainWindow(QWidget *parent) :
     // Initialise encryption i/o
     enc = new Encryption(QString("trumpton.uk"), QString("TextFileEncryption")) ;
 
-    // TODO: Reset all vars
-    editor=NULL ;
-    Close() ;
 
     // Load INI file from TrumptonApps directory, default database directory, otherwise application directory
 
@@ -124,6 +127,7 @@ MainWindow::MainWindow(QWidget *parent) :
         gDebugEnabled=false ;
     }
 
+    Close() ;
 }
 
 
@@ -134,7 +138,7 @@ MainWindow::~MainWindow()
     if (dirtylabel) delete dirtylabel ;
     if (readonlylabel) delete readonlylabel ;
     if (encryptedlabel) delete encryptedlabel ;
-
+    closeSound() ;
     delete ui;
 }
 
@@ -1015,7 +1019,7 @@ void MainWindow::on_action_Logout_triggered()
 
 void MainWindow::on_textEdit_textChanged()
 {
-    dirtylabel->setVisible(true) ;
+    //dirtylabel->setVisible(true) ;
 }
 
 void MainWindow::on_action_SetAsDefault_triggered()
