@@ -414,7 +414,7 @@ QString& FileNavigator::getFilePath(QString filename, bool preferbackups)
             QString filename = files.at(fileindex) ;
             filename = filename.replace(ENC, "").replace(TXT,"") ;
             filePath = filePath + "/" + filename + "/" + backups.at(backupindex) ;
-        } else {
+        } else if (fileindex>=0) {
             filePath = filePath + "/" + files.at(fileindex) ;
         }
 
