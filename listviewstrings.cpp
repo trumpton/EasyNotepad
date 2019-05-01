@@ -20,6 +20,11 @@ ListViewStrings::ListViewStrings(QObject *parent)
     model.setStringList(listtext) ;
 }
 
+ListViewStrings::ListViewStrings(ListViewStrings& other)
+{
+    qFatal("FATAL: ListViewStrings copied or not passed to function by ref") ;
+}
+
 QModelIndex ListViewStrings::findModelIndex(int idx)
 {
     return model.index(idx) ;

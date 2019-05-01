@@ -15,6 +15,7 @@ private:
 
 public:
     explicit ListViewStrings(QObject *parent = 0);
+    ListViewStrings(ListViewStrings& other) ;
     ~ListViewStrings() ;
 
     QModelIndex findModelIndex(int idx) ;
