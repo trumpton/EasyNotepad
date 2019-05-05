@@ -1,3 +1,8 @@
+#ifndef _VERSION_DEFINED
+#define _VERSION_DEFINED
+
+// Version of application
 #define BUILDVERSION "2.0.0"
-#define BUILDDATE "2018-07-01"
-#define COMPILEDATE __DATE__ " - " __TIME__
+#define BUILDDATE "2019-05-05"
+
+#endif
