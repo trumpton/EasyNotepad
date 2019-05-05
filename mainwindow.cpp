@@ -998,7 +998,13 @@ void MainWindow::on_action_Email_triggered()
 
 void MainWindow::on_action_About_triggered()
 {
-    warningOkDialog(this, QString("About Easy Notepad"), QString("This is version " BUILDVERSION " (" BUILDDATE ") of Easy Notepad, and was built on :\n  " COMPILEDATE))  ;
+    QString text =
+    QString("EasyNotepad Release %1.\n").arg(BUILDVERSION) +
+    QString("It was built on: %1.\n").arg(buildDate()) +
+    QString("\EasyNotepad Repository Version: %1.\n").arg(appHash()) +
+    QString("Library Repository Version: %1.\n").arg(libVersion()) ;
+
+    warningOkDialog(this, QString("About Easy Notepad"), text)  ;
 }
 
 

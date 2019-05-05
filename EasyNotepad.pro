@@ -11,6 +11,15 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = EasyNotepad
 TEMPLATE = app
 
+# Include Git Hash / Revision Details
+# Uncomment NOGIT if Git not used.
+#DEFINES += NOGIT
+GITHASH = \\\"$$system(git --git-dir=\"$$PWD/.git\" describe --always --tags)\\\"
+LIBHASH = \\\"$$system(git --git-dir=\"$$PWD/../Lib/.git\" describe --always --tags)\\\"
+DEFINES += GITHASH=$$GITHASH
+DEFINES += LIBHASH=$$LIBHASH
+DEFINES += PWD=\\\"$$PWD\\\"
+
 win32:RC_FILE=icon.rc
 win32:LIBS += -lUser32
 
