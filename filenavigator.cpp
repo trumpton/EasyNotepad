@@ -137,7 +137,7 @@ void FileNavigator::clearFilename()
 void FileNavigator::setFilename(QString foldername, QString filename, QString backupname)
 {
     QString folder ;
-    QString file ;
+    QString file, filenoe ;
     QString backup ;
     bool foundfolder=false ;
     bool foundfile=false ;
@@ -155,9 +155,22 @@ void FileNavigator::setFilename(QString foldername, QString filename, QString ba
     if (!filename.isEmpty()) file=filename ;
     else if (folderindex>0 && fileindex>0) file = files[fileindex] ;
 
+    filenoe=file.replace(TXT,"").replace(ENC,"") ;
+
     if (!backupname.isEmpty()) backup=backupname ;
     else if (folderindex>0 && fileindex>0 && backupindex>=0) backup = backups[backupindex] ;
 
+    // Reset indexes, and re-scan
+
+    folderindex=-1 ;
+    fileindex=-1 ;
+    backupindex=-1 ;
+
+    folders.clear() ;
+    files.clear() ;
+    backups.clear() ;
+
+    bool encrypted = folder.endsWith(ENF) ;
 
     // load folders and search for folder by name
 
@@ -173,20 +186,23 @@ void FileNavigator::setFilename(QString foldername, QString filename, QString ba
     // Load files and seach for file by name (without extension)
 
     if (foundfolder) {
-        loadFiles(directory + "/" + folders[folderindex], TXT, ENC) ;
+        loadFiles(directory + "/" + folders[folderindex], encrypted?ENC:TXT) ;
         foundfile=false ;
         for (int i=0, sz=files.size(); i<sz && !foundfile; i++) {
-            if (file.compare(files.at(i))==0) {
+            QString thisfile = files.at(i) ;
+            if (filenoe.compare(thisfile.replace(TXT,"").replace(ENC,""))==0) {
                 fileindex=i ;
                 foundfile=true ;
             }
         }
     }
 
-    // Load backups and seach for backup by name
+    // Load backups and search for backup by name
 
     if (foundfile) {
-        loadBackups(directory + "/" + folders[folderindex] + "/" + file.replace(TXT,"").replace(ENC,""), BAK, ENB) ;
+
+        loadBackups(directory + "/" + folders[folderindex] + "/" + filenoe, encrypted?ENB:BAK) ;
+
         for (int i=0, sz=backups.size(); i<sz; i++) {
             if (backups.at(i).compare(backup)==0) {
                 backupindex=i ;
@@ -195,11 +211,13 @@ void FileNavigator::setFilename(QString foldername, QString filename, QString ba
     }
 
     // Hide backups if file is --
-    if (isCreateFile()) backupindex=-1 ;
+    if (isCreateFile()) {
+        backupindex=-1 ;
+    }
 
     // Set the isbackup (readonly) flag
 
-    if (backupindex>=0) isbackup=true ;
+    if (backupindex>0) isbackup=true ;
     else isbackup=false ;
 
     // Force the current selection
@@ -260,7 +278,7 @@ void FileNavigator::update(int cursorpos)
     txt=entry ;
     if (selection==0) s2=txt.length() ;
 
-    if (folderindex>1 && fileindex>=0) {
+    if (folderindex>=2 && fileindex>=0) {
         if (cursorpos>=txt.length()) selection=1 ;
         txt = txt + ": " ;
         if (selection==1) s1 = txt.length() ;
@@ -274,10 +292,10 @@ void FileNavigator::update(int cursorpos)
 
     txt = txt + " " ;
 
-    if (folderindex>1 && fileindex>0 && backupindex>=0) {
+    if (folderindex>=2 && fileindex>=2) {
         if (cursorpos>=txt.length()) selection=2 ;
         QString backupdate ;
-        if (backupindex==0) backupdate = "latest" ;
+        if (backupindex<=0) backupdate = "latest" ;
         else backupdate = parseBackupDate(backups.at(backupindex)) ;
         txt = txt + "(" ;
         if (selection==2) s1 = txt.length() ;
@@ -313,10 +331,6 @@ QString& FileNavigator::getTempFolderPath()
 void FileNavigator::loadFolders(QString directory)
 {
     parseDirectory(directory, folders, "", false, true) ;
-    files.clear() ;
-    fileindex=-1 ;
-    backups.clear() ;
-    backupindex=-1 ;
 
     // Find temp folder and remove it
     int idx=-1 ;
@@ -332,14 +346,9 @@ void FileNavigator::loadFolders(QString directory)
     else folderindex=2 ;
 }
 
-void FileNavigator::loadFiles(QString directory, QString mask1, QString mask2)
+void FileNavigator::loadFiles(QString directory, QString mask1)
 {
-
     parseDirectory(directory, files, mask1, false, true) ;
-    parseDirectory(directory, files, mask2, false, false) ;
-
-    backups.clear() ;
-    backupindex=-1 ;
 
     files.insert(0, "-- create file --") ;
     files.insert(0, "-- rename folder --") ;
@@ -350,14 +359,13 @@ void FileNavigator::loadFiles(QString directory, QString mask1, QString mask2)
     fileindex=2 ;
 }
 
-void FileNavigator::loadBackups(QString directory, QString mask1, QString mask2)
+void FileNavigator::loadBackups(QString directory, QString mask1)
 {
-    backups.clear() ;
     if (isCreateFile() || isRenameFolder() || isDeleteFolder()) {
+        backups.clear() ;
         backupindex=-1 ;
     } else {
         parseDirectory(directory, backups, mask1, true, true) ;
-        parseDirectory(directory, backups, mask2, true, false) ;
         if (backups.size()>0) {
             backupindex=0 ;
         } else {
@@ -396,7 +404,6 @@ QString& FileNavigator::getEditableFilePath(QString filename)
 QString& FileNavigator::getFilePath(QString filename, bool preferbackups)
 {
     bool preferencrypted = isFolderEncrypted() ;
-
 
     if (isDeleteFolder() || isRenameFolder()) {
         filePath = getFolderPath() ;
@@ -449,7 +456,6 @@ QString& FileNavigator::getBackupFilePath(bool create)
             backupFilePath="" ;
         }
     }
-
     return backupFilePath ;
 }
 
@@ -521,7 +527,6 @@ bool FileNavigator::isCreateFile()
 }
 
 
-
 bool FileNavigator::isBackup()
 {
     return (backupindex>0) ;
@@ -531,17 +536,17 @@ bool FileNavigator::isBackup()
 bool FileNavigator::isFolderEncrypted()
 {
     if (folderindex>=folders.size() || folderindex<0) return false ;
-    return folders.at(folderindex).contains(ENF) ;
+    return folders.at(folderindex).endsWith(ENF) ;
 }
 
 bool FileNavigator::isFileEncrypted()
 {
     if (backupindex>0) {
         if (backupindex>=files.size()) return false ;
-        return backups.at(backupindex).contains(ENB) ;
+        return backups.at(backupindex).endsWith(ENB) ;
     } else {
         if (fileindex>=files.size() || fileindex<0) return false ;
-        return files.at(fileindex).contains(ENC) ;
+        return files.at(fileindex).endsWith(ENC) ;
     }
 }
 
@@ -691,7 +696,9 @@ void FileNavigator::keyPressEvent(QKeyEvent *event)
     }
 
     if (reloadfiles) {
-        loadFiles(getFolderPath(), TXT, ENC) ;
+        QString& folderpath = getFolderPath() ;
+        bool encrypted = folderpath.endsWith(ENF) ;
+        loadFiles(folderpath, encrypted?ENC:TXT) ;
     }
 
     if (isCreateFile() || isRenameFolder() || isDeleteFolder()) {
@@ -701,8 +708,9 @@ void FileNavigator::keyPressEvent(QKeyEvent *event)
 
     if (reloadbackups) {
         QString filename = files.at(fileindex) ;
+        bool encrypted = filename.endsWith(ENC) ;
         filename = filename.replace(TXT,"").replace(ENC,"") ;
-        loadBackups(getFolderPath() + "/" + filename, BAK, ENB) ;
+        loadBackups(getFolderPath() + "/" + filename, encrypted?ENB:BAK) ;
     }
 
     if (changed) update() ;

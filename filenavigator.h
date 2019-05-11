@@ -25,8 +25,8 @@ private:
     QString& parseBackupDate(QString backupdate) ;
 
     void loadFolders(QString directory) ;
-    void loadFiles(QString directory, QString mask1, QString mask2);
-    void loadBackups(QString directory, QString mask1, QString mask2) ;
+    void loadFiles(QString directory, QString mask1);
+    void loadBackups(QString directory, QString mask1) ;
 
     void keyPressEvent(QKeyEvent *event) ;
 

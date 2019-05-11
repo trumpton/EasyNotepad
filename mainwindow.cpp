@@ -309,6 +309,10 @@ bool MainWindow::Load(QString path)
                 }
             }
             // New file created, so update fs
+            // fileselect.cpp 53
+            // filenavigator.cpp 239
+            // filenavigator 164
+            // filenavigator 321
             fs.setFilenameFromPath(path) ;
         }
     }
@@ -329,7 +333,7 @@ bool MainWindow::Load(QString path)
     } else {
         filepath = fs.getFilePath() ;
         description = fs.getFileDescription(false, true) ;
-        isreadonly = fs.isReadOnly() ;
+        isreadonly = fs.isReadOnly() ; // OR HERE
         isdeleted = !fileExists(fs.getEditableFilePath()) ;
 
     }
