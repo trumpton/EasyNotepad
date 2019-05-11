@@ -309,10 +309,6 @@ bool MainWindow::Load(QString path)
                 }
             }
             // New file created, so update fs
-            // fileselect.cpp 53
-            // filenavigator.cpp 239
-            // filenavigator 164
-            // filenavigator 321
             fs.setFilenameFromPath(path) ;
         }
     }
@@ -1004,8 +1000,8 @@ void MainWindow::on_action_About_triggered()
 {
     QString text =
     QString("EasyNotepad Release %1.\n").arg(BUILDVERSION) +
-    QString("It was built on: %1.\n").arg(buildDate()) +
-    QString("\EasyNotepad Repository Version: %1.\n").arg(appHash()) +
+    QString("It was built on: %1.\n\n").arg(buildDate()) +
+    QString("EasyNotepad Repository Version: %1.\n").arg(appHash()) +
     QString("Library Repository Version: %1.\n").arg(libVersion()) ;
 
     warningOkDialog(this, QString("About Easy Notepad"), text)  ;
