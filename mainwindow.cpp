@@ -214,7 +214,7 @@ bool MainWindow::Save(bool ask, bool force)
             if (!enc->loggedIn()) {
                 success=false ;
             } else {
-                if (!enc->save(filepath, bytes)) {
+                if (!checklogin() || !enc->save(filepath, bytes)) {
                     success=false ;
                 }
             }
@@ -230,7 +230,7 @@ bool MainWindow::Save(bool ask, bool force)
         // Save Backup
         QString backupfilepath = fs.getBackupFilePath() ;
         if (fs.isFolderEncrypted()) {
-            if (!enc->save(backupfilepath, bytes)) {
+            if (!checklogin() || !enc->save(backupfilepath, bytes)) {
                 success=false ;
             }
         } else {
@@ -303,7 +303,7 @@ bool MainWindow::Load(QString path)
             if (!fileExists(path)) {
                 // Create File that doesn't exist
                 if (fs.isFolderEncrypted()) {
-                    enc->save(path, QByteArray("")) ;
+                    if (checklogin()) enc->save(path, QByteArray("")) ;
                 } else {
                     writeToFile(path, QString("")) ;
                 }
@@ -636,7 +636,7 @@ void MainWindow::on_action_Open_triggered()
 
                         // Create a dummmy file
                         if (fs.isFolderEncrypted()) {
-                            enc->save(filepath, QByteArray("")) ;
+                            if (checklogin()) enc->save(filepath, QByteArray("")) ;
                         } else {
                             writeToFile(filepath, QString("")) ;
                         }
@@ -1025,11 +1025,26 @@ void MainWindow::on_action_Logout_triggered()
 
 void MainWindow::on_textEdit_textChanged()
 {
-    //dirtylabel->setVisible(true) ;
+    dirtylabel->setVisible(true) ;
 }
 
 void MainWindow::on_action_SetAsDefault_triggered()
 {
     ifilter.registerTypes();
     warningOkDialog(this, QString("Easy Notepad"), QString("EasyNotepad has been registered as the default application for its configured types"))  ;
+}
+
+bool MainWindow::checklogin()
+{
+    int t=0 ;
+    while (!enc->loggedIn() && t<3) {
+        enc->login() ;
+        t++ ;
+    }
+    if (enc->loggedIn()) {
+        return true ;
+    } else {
+        warningOkDialog(this, QString("Easy Notepad - File Create/Save"), QString("Unable to Login, please check your login password"))  ;
+        return false ;
+    }
 }

@@ -36,6 +36,7 @@ private:
     bool Backup() ;
     void beep() ;
     void msg(QString msg) ;
+    bool checklogin() ;
 
 private slots:
     void on_action_Open_triggered();

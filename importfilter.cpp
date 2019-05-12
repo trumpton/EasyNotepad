@@ -150,8 +150,11 @@ bool ImportFilter::LoadFile(QString filename, QString& contents, QString datadir
     if (command.compare("Z")==0 && enc) {
 
         // Open the Encrypted UTF-8 File
-        if (!enc->loggedIn()) {
+
+        int t=0 ;
+        while (!enc->loggedIn() && t<3) {
             enc->login() ;
+            t++ ;
         }
         if (!enc->loggedIn()) {
             contents = "Unable to login.  Please check your login password\n" ;
