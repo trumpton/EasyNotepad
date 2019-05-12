@@ -472,6 +472,25 @@ qint64 MainWindow::masterPID(QSharedMemory *sharedMem)
 bool MainWindow::Backup()
 {
     // TODO: Tidy backup files
+
+    // Remove temp files older than 7 days
+    QStringList nameFilter, files ;
+    QString tempfolderpath = fs.getTempFolderPath() ;
+    QDir tempdir(tempfolderpath) ;
+    nameFilter << "??????-??????_*.txt" ;
+    tempdir.setNameFilters(nameFilter) ;
+    files = tempdir.entryList() ;
+    QDateTime now = QDateTime::currentDateTime() ;
+    for (int i=files.size()-1; i>=0; i--) {
+        QString filename = tempfolderpath + "/" + files.at(i) ;
+        QFileInfo fi(filename) ;
+        QDateTime lm = fi.lastModified() ;
+        if (lm.addDays(7)<now) {
+            qDebug() << "Removing " << filename ;
+            QFile::remove(filename) ;
+        }
+    }
+
     return true ;
 }
 
