@@ -837,11 +837,12 @@ void MainWindow::on_actionRename_File_triggered()
 {
     bool ok ;
     QString newFileName ;
-    newFileName = inputDialog(this, tr("Rename"),  tr("Rename file to?"), QLineEdit::Normal, newFileName, &ok) ;
+    newFileName = inputDialog(this, tr("Rename"),  tr("Save Current File, and Rename to?"), QLineEdit::Normal, newFileName, &ok) ;
     if (ok && !newFileName.isEmpty()) {
         Save() ;
+        bool isEncrypted = fs.isFileEncrypted() ;
         QString currentName = fs.getFilePath() ;
-        QString newName = fs.getFolderPath() + "/" + newFileName + "." + TXT ;
+        QString newName = fs.getFolderPath() + "/" + newFileName + QString(isEncrypted?ENC:TXT) ;
         QString currentBackup = fs.getBackupFolderPath() ;
         QString newBackup = fs.getFolderPath() + "/" + newFileName ;
         bool dorename=true ;
