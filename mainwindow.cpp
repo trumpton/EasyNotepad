@@ -20,7 +20,6 @@
 #include "../Lib/itemselect.h"
 #include "../Lib/alertsound.h"
 #include "../Lib/iniconfig.h"
-#include "version.h"
 
 #ifdef WIN32
 #include <windows.h>
@@ -1019,10 +1018,9 @@ void MainWindow::on_action_Email_triggered()
 void MainWindow::on_action_About_triggered()
 {
     QString text =
-    QString("EasyNotepad Release %1.\n").arg(BUILDVERSION) +
-    QString("It was built on: %1.\n\n").arg(buildDate()) +
-    QString("EasyNotepad Repository Version: %1.\n").arg(appHash()) +
-    QString("Library Repository Version: %1.\n").arg(libVersion()) ;
+    QString("EasyNotepad Version: %1.\n").arg(appHash()) +
+    QString("Library Version: %1.\n").arg(libVersion()) +
+    QString("It was built on: %1.\n\n").arg(buildDate()) ;
 
     warningOkDialog(this, QString("About Easy Notepad"), text)  ;
 }

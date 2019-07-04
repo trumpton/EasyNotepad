@@ -5,6 +5,7 @@
 #-------------------------------------------------
 
 QT       += core gui multimedia
+win32:QT += console
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -64,7 +65,6 @@ HEADERS  += mainwindow.h \
     ../Lib/iniconfig.h \
     formatselect.h \
     ../Lib/aes.h \
-    version.h \
     ../Lib/encryption.h \
     ../Lib/safelineedit.h
 
