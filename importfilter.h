@@ -6,7 +6,6 @@
 #include <QTextCodec>
 
 #include "formatselect.h"
-#include "importfilter.h"
 #include "../Lib/iniconfig.h"
 #include "../Lib/encryption.h"
 
