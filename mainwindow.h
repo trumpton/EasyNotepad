@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QSharedMemory>
 #include <QLabel>
+#include <QTimer>
 #include "importfilter.h"
 #include "fileselect.h"
 #include "search.h"
@@ -30,7 +31,7 @@ public:
 
 private:
     bool Close() ;
-    bool Save(bool ask=false, bool force=false) ;
+    bool Save(bool ask, bool force, bool isautosave) ;
     bool Load(QString filepath = QString("")) ;
     qint64 masterPID(QSharedMemory *sharedMem) ;
     bool Backup() ;
@@ -64,6 +65,8 @@ private slots:
 
     void on_action_SetAsDefault_triggered();
 
+    void on_timerTick() ;
+
 private:
     Encryption *enc;
     bool debugenabled ;
@@ -78,6 +81,7 @@ private:
     Help help ;
     bool isimportable ;
     QLabel *readonlylabel, *encryptedlabel, *dirtylabel ;
+    QTimer timer ;
 };
 
 #endif // MAINWINDOW_H

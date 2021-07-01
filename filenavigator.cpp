@@ -432,7 +432,7 @@ QString& FileNavigator::getFilePath(QString filename, bool preferbackups)
 QString& FileNavigator::getBackupFolderPath()
 {
     backupFolderPath = "" ;
-    if (!isCreateFolder() && !isCreateFile() && !isRenameFolder()) {
+    if (fileindex>=0 && !isCreateFolder() && !isCreateFile() && !isRenameFolder()) {
         QString filename = files.at(fileindex) ;
         backupFolderPath = getFolderPath() + "/" + filename.replace(ENC,QString("")).replace(TXT,QString("")) ;
     }
@@ -695,18 +695,18 @@ void FileNavigator::keyPressEvent(QKeyEvent *event)
         files.clear() ;
     }
 
-    if (reloadfiles) {
+    if (fileindex>=0 && reloadfiles) {
         QString& folderpath = getFolderPath() ;
         bool encrypted = folderpath.endsWith(ENF) ;
         loadFiles(folderpath, encrypted?ENC:TXT) ;
     }
 
-    if (isCreateFile() || isRenameFolder() || isDeleteFolder()) {
+    if (fileindex<0 || isCreateFile() || isRenameFolder() || isDeleteFolder()) {
         backupindex=-1 ;
         backups.clear() ;
     }
 
-    if (reloadbackups) {
+    if (fileindex>=0  && reloadbackups) {
         QString filename = files.at(fileindex) ;
         bool encrypted = filename.endsWith(ENC) ;
         filename = filename.replace(TXT,"").replace(ENC,"") ;

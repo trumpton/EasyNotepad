@@ -50,6 +50,9 @@ void FileSelect::setFilename(QString folder, QString file)
 
 void FileSelect::setFilenameFromPath(QString path)
 {
+    // remove .autosave tail
+    path = path.replace(".autosave","") ;
+
     ui->fileSelect->setFilenameFromPath(path) ;
     ui->fileSelect->update() ;
 }

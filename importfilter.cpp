@@ -127,6 +127,7 @@ bool ImportFilter::registerTypes()
 
 Record& ImportFilter::FindFilter(QString filename)
 {
+    filename = filename.replace(".autosave","") ;
     QRegExp rx(".*\\.([^\\.]*)") ;
     if (rx.indexIn(filename)!=-1) {
         QString ext = rx.cap(1).toLower() ;

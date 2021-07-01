@@ -55,6 +55,12 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // Connect Handlers
     connect(ui->menuKeyAndPassword, SIGNAL(aboutToShow()), this, SLOT(refreshMenus())) ;
+    connect(&timer, SIGNAL(timeout()), this, SLOT(on_timerTick())) ;
+
+    // Setup timer (autosave)
+    timer.setSingleShot(false) ;
+    timer.setInterval(60000) ;
+    timer.start() ;
 
     // Add Statusbar widgets
     QStatusBar * status_bar = statusBar();
@@ -132,7 +138,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-    Save(true) ;
+    // ask=true, force=false, autosave=false
+    Save(true,false,false) ;
     Close() ;
     if (dirtylabel) delete dirtylabel ;
     if (readonlylabel) delete readonlylabel ;
@@ -140,6 +147,14 @@ MainWindow::~MainWindow()
     closeSound() ;
     delete ui;
 }
+
+
+void MainWindow::on_timerTick()
+{
+    // ask=false, force=true, autosave=true
+    Save(false,true,true) ;
+}
+
 
 void MainWindow::setPath(QString directory, QString fullpath)
 {
@@ -172,7 +187,7 @@ void MainWindow::setPath(QString directory, QString fullpath)
 // File Save and Load
 //
 
-bool MainWindow::Save(bool ask, bool force)
+bool MainWindow::Save(bool ask, bool force, bool isautosave)
 {
     bool dosave=true ;
     bool success=true ;
@@ -206,8 +221,17 @@ bool MainWindow::Save(bool ask, bool force)
 
         // Save file
         QString filepath = fs.getFilePath() ;
+        QString autosavefilepath = filepath + ".autosave" ;
+
+        if (isautosave) {
+            filepath = filepath + ".autosave" ;
+        } else {
+            QDir dir ;
+            dir.remove(autosavefilepath) ;
+        }
+
         if (fs.isFolderEncrypted()) {
-            if (!enc->loggedIn()) {
+            if (!isautosave && !enc->loggedIn()) {
                 enc->login() ;
             }
             if (!enc->loggedIn()) {
@@ -229,8 +253,10 @@ bool MainWindow::Save(bool ask, bool force)
         // Save Backup
         QString backupfilepath = fs.getBackupFilePath() ;
         if (fs.isFolderEncrypted()) {
-            if (!checklogin() || !enc->save(backupfilepath, bytes)) {
-                success=false ;
+            if (!isautosave && !checklogin()) {
+                if (!enc->save(backupfilepath, bytes)) {
+                    success=false ;
+                }
             }
         } else {
             if (!writeToFile(backupfilepath, bytes)) {
@@ -238,15 +264,17 @@ bool MainWindow::Save(bool ask, bool force)
             }
         }
 
-        if (success) {
-            dirtylabel->setVisible(false) ;
-            play(FileSave) ;
-            buffer = newbuffer ;
-        } else {
-            play(Error) ;
+        if (!isautosave) {
+            if (success) {
+                dirtylabel->setVisible(false) ;
+                play(FileSave) ;
+                buffer = newbuffer ;
+            } else {
+                play(Error) ;
+            }
         }
-    }
 
+     }
     return success ;
 }
 
@@ -292,13 +320,17 @@ bool MainWindow::Load(QString path)
     isimportable=false ;
 
     if (!path.isEmpty()) {
+
         QString basedir = fs.getPath() ;
         if (path.length()<basedir.length() || path.left(basedir.length()).compare(basedir)!=0) {
             // Path is not in the EasyNotepad area
             isimportable=true ;
             fs.clearFilename() ;
+
         } else {
+
             // Path is in the EasyNotepad area, so fs will be up-to-date
+
             if (!fileExists(path)) {
                 // Create File that doesn't exist
                 if (fs.isFolderEncrypted()) {
@@ -307,6 +339,14 @@ bool MainWindow::Load(QString path)
                     writeToFile(path, QString("")) ;
                 }
             }
+
+            if (fileExists(path + ".autosave")) {
+                if (warningYesNoDialog(this, "Warning", "An auto-save version of the file exists.  Do you wish to load it?")) {
+                     // Load the autosave version
+                     path = path + ".autosave" ;
+                }
+            }
+
             // New file created, so update fs
             fs.setFilenameFromPath(path) ;
         }
@@ -509,7 +549,7 @@ void MainWindow::msg(QString msg)
 void MainWindow::on_action_Open_triggered()
 {
     bool cancel=false, finished=false ;
-    Save(true) ;
+    Save(true, false, false) ;
 
     // Close current file
     // Because FileSelect doesn't remember path
@@ -535,7 +575,7 @@ void MainWindow::on_action_Open_triggered()
                 bool ok ;
                 QString newFolderName ;
 
-                Save(true) ;
+                Save(true, false, false) ;
 
                 warningOkDialog(this, "Warning", "Please close all instances of Easy Notepad that are using the folder you wish to rename before continuing!") ;
 
@@ -689,7 +729,7 @@ void MainWindow::on_action_Open_triggered()
 
 void MainWindow::on_action_Save_triggered()
 {
-    Save(false) ;
+    Save(false, true, false) ;
 }
 
 
@@ -767,7 +807,7 @@ void MainWindow::on_actionFind_Global_triggered()
             filename = search.getSelectionFileName() ;
         }
         if (!filepath.isEmpty()) {
-            if (Save(true)) {
+            if (Save(true, false, false)) {
                 fs.setFilenameFromPath(filepath) ;
                 if (Load(filepath)) play(FileOpen) ;
                 dirtylabel->setVisible(false) ;
@@ -793,7 +833,7 @@ void MainWindow::on_actionFind_Old_triggered()
             filename = search.getSelectionFileName() ;
         }
         if (!filepath.isEmpty()) {
-            if (Save(true)) {
+            if (Save(true, false, false)) {
                 fs.setFilenameFromPath(filepath) ;
                 if (Load(filepath)) play(FileOpen) ;
                 dirtylabel->setVisible(false) ;
@@ -810,7 +850,7 @@ void MainWindow::on_action_Delete_triggered()
     if (warningYesNoDialog(this, "EasyNote Delete?",
                "Do you want to delete \"" + fs.getFileDescription(true, false) + "\"?")) {
 
-        Save(false, true) ;
+        Save(false, true, false) ;
         QFile::remove(fs.getFilePath()) ;
         Close() ;
         fs.setFilename() ; // Refresh
@@ -828,7 +868,7 @@ void MainWindow::on_action_Undelete_triggered()
         copyFile(fs.getFilePath(), filename) ;
         fs.setFilename() ;
         Load(filename) ;
-        Save(false, true) ;
+        Save(false, true, false) ;
     }
 }
 
@@ -838,7 +878,7 @@ void MainWindow::on_actionRename_File_triggered()
     QString newFileName ;
     newFileName = inputDialog(this, tr("Rename"),  tr("Save Current File, and Rename to?"), QLineEdit::Normal, newFileName, &ok) ;
     if (ok && !newFileName.isEmpty()) {
-        Save() ;
+        Save(true, false, false) ;
         bool isEncrypted = fs.isFileEncrypted() ;
         QString currentName = fs.getFilePath() ;
         QString newName = fs.getFolderPath() + "/" + newFileName + QString(isEncrypted?ENC:TXT) ;
