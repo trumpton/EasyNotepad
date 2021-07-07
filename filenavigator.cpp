@@ -48,7 +48,7 @@
 
 
 #include <QDir>
-#include <QRegExp>
+#include <QRegularExpression>
 #include <QDate>
 #include <QApplication>
 #include <QInputDialog>
@@ -237,19 +237,22 @@ void FileNavigator::setFilename(QString foldername, QString filename, QString ba
 void FileNavigator::setFilenameFromPath(QString path)
 {
     QString folder, file, backup ;
-    QRegExp filex("/([^/]*)/([^/]*)") ;
-    QRegExp backupx("/([^/]*)/([^/]*)/([^/]*)") ;
+    QRegularExpression filex("/([^/]*)/([^/]*)") ;
+    QRegularExpression backupx("/([^/]*)/([^/]*)/([^/]*)") ;
 
     path = path.replace(directory,"") ;
     nofilename=false ;
 
-    if (backupx.indexIn(path)>=0) {
-        folder = backupx.cap(1) ;
-        file = backupx.cap(2) ;
-        backup = backupx.cap(3) ;
-    } else if (filex.indexIn(path)>=0) {
-        folder = filex.cap(1) ;
-        file = filex.cap(2) ;
+    QRegularExpressionMatch filem = filex.match(path) ;
+    QRegularExpressionMatch backupm = backupx.match(path) ;
+
+    if (backupm.hasMatch()) {
+        folder = backupm.captured(1) ;
+        file = backupm.captured(2) ;
+        backup = backupm.captured(3) ;
+    } else if (filem.hasMatch()) {
+        folder = filem.captured(1) ;
+        file = filem.captured(2) ;
         backup = "-" ;
     }
     setFilename(folder, file, backup) ;
@@ -390,7 +393,7 @@ QString& FileNavigator::getEditableFilePath(QString filename)
     if (filename.isEmpty() && fileindex<0) {
         editableFilePath = "" ;
     } else {
-        bool preferencrypted = isFolderEncrypted() ;
+        //bool preferencrypted = isFolderEncrypted() ;
         editableFilePath = getFolderPath() + "/" ;
         if (filename.isEmpty()) {
             editableFilePath = editableFilePath + files.at(fileindex) ;
@@ -587,11 +590,12 @@ void FileNavigator::keyPressEvent(QKeyEvent *event)
         switch (selection) {
         case 0: folderindex-- ;
                 if (folderindex<0) folderindex=0 ;
-                else { reloadfiles=true ; reloadbackups=true ; }
+                reloadfiles=true ; reloadbackups=true ;
+                fileindex=0 ;
                 break ;
         case 1: fileindex-- ;
                 if (fileindex<0) fileindex=0 ;
-                else { reloadbackups=true ; }
+                reloadbackups=true ;
                 break ;
         case 2: backupindex-- ;
                 if (backupindex<0) backupindex=0 ;
@@ -603,11 +607,12 @@ void FileNavigator::keyPressEvent(QKeyEvent *event)
         switch (selection) {
         case 0: folderindex++ ;
                 if (folderindex>=folders.size()) folderindex=folders.size()-1 ;
-                else { reloadfiles=true ; reloadbackups=true ; }
+                reloadfiles=true ; reloadbackups=true ;
+                fileindex=0 ;
                 break ;
         case 1: fileindex++ ;
                 if (fileindex>=files.size()) fileindex=files.size()-1 ;
-                else { reloadbackups=true ; }
+                reloadbackups=true ;
             break ;
         case 2: backupindex++ ;
                 if (backupindex>=backups.size()) backupindex=backups.size()-1 ;
@@ -618,8 +623,8 @@ void FileNavigator::keyPressEvent(QKeyEvent *event)
     else if (key==Qt::Key_Minus || (key>=Qt::Key_A && key<=Qt::Key_Z) || (key>=Qt::Key_0 && key<=Qt::Key_9)) {
         QChar letter ;
         if (key==Qt::Key_Minus) letter = '-' ;
-        else if (key>=Qt::Key_A && key<=Qt::Key_Z) letter = ('a' + key - Qt::Key_A) ;
-        else letter = ('0' + key - Qt::Key_0) ;
+        else if (key>=Qt::Key_A && key<=Qt::Key_Z) letter = QChar('a' + key - Qt::Key_A) ;
+        else letter = QChar('0' + key - Qt::Key_0) ;
 
         switch (selection) {
         case 0:
@@ -651,6 +656,8 @@ void FileNavigator::keyPressEvent(QKeyEvent *event)
                     play(Wrapped) ;
                 }
                 folderindex=currentindex ;
+                fileindex=0 ;
+                backupindex=0 ;
             }
             break ;
         case 1:
@@ -682,6 +689,7 @@ void FileNavigator::keyPressEvent(QKeyEvent *event)
                     play(Wrapped) ;
                 }
                 fileindex=currentindex ;
+                backupindex=0 ;
             }
             break ;
         case 2:

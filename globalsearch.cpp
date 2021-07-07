@@ -191,25 +191,29 @@ bool GlobalSearch::searchInFile(QString filename, QString filepath, QString text
     text.replace("\t","") ;
     text.replace(" ","") ;
 
-    QRegExp re( ".*(" + text + ").*" ) ;
-    re.setCaseSensitivity(Qt::CaseInsensitive) ;
+    text = deAccent(text) ;
+    text.replace(" ", "") ;
+    text.replace("\t", "") ;
+    QRegularExpression re( ".*(" + text + ").*" ) ;
 
     QString testfile = deAccent(filename) ;
     testfile.replace(" ", "") ;
     testfile.replace("\t", "") ;
+    QRegularExpressionMatch match = re.match(testfile, QRegularExpression::CaseInsensitiveOption) ;
 
-    if (re.exactMatch(testfile)) return true ;
+    if (match.hasMatch()) return true ;
 
     QString filetext ;
 
     if (!importfilter->LoadFile(filepath, filetext)) return false ;
 
+    filetext = deAccent(filetext) ;
     filetext.replace("\n", "") ;
     filetext.replace("\r", "") ;
     filetext.replace("\t", "") ;
     filetext.replace(" ", "") ;
 
-    re.setCaseSensitivity(Qt::CaseInsensitive) ;
-    return (re.exactMatch(filetext)) ;
+    match = re.match(filetext, QRegularExpression::CaseInsensitiveOption) ;
+    return (match.hasMatch()) ;
 }
 

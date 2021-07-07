@@ -1,5 +1,5 @@
 #include "listviewstrings.h"
-
+#include <QRegularExpression>
 
 
 ListViewStrings::~ListViewStrings()
@@ -55,11 +55,12 @@ int ListViewStrings::find(QString resulthint)
 // TODO: make this a best match
 int ListViewStrings::find(QString resulttext, int startindex)
 {
-    QRegExp rx ;
+    QRegularExpression rx ;
     int i=startindex+1 ;
     rx.setPattern(".*" + resulttext.toLower() + ".*") ;
     while (i<listtext.size()) {
-        if (rx.indexIn(listtext.at(i).toLower())>=0) return i ;
+        QRegularExpressionMatch match = rx.match(listtext.at(i).toLower()) ;
+        if (match.hasMatch()) return i ;
         i++ ;
     }
     return -1 ;

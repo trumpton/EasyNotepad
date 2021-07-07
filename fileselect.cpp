@@ -120,3 +120,10 @@ bool FileSelect::isFileEncrypted()
 {
     return ui->fileSelect->isFileEncrypted() ;
 }
+
+int FileSelect::getFileLength(QString path)
+{
+    QFile f(path) ;
+    int length = f.size() ;
+    return length ;
+}

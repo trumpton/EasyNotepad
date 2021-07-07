@@ -38,6 +38,7 @@ public:
     bool isFileEncrypted() ;
     bool isFolderEncrypted() ;
 
+    int getFileLength(QString path) ;
 
     InputType execDialog() ;
 

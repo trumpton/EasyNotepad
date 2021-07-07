@@ -3,6 +3,7 @@
 #include <QFile>
 #include <QTextStream>
 #include <QRegExp>
+#include <QRegularExpression>
 #include <QCoreApplication>
 #include <QProcess>
 #include <QStandardPaths>
@@ -221,7 +222,7 @@ bool ImportFilter::LoadFile(QString filename, QString& contents, QString datadir
         command = ExpandVars(command, filename, datadir) ;
 
         QProcess myProcess ;
-        QStringList args = command.split( QRegExp(" (?=[^\"]*(\"[^\"]*\"[^\"]*)*$)") );
+        QStringList args = command.split( QRegularExpression(" (?=[^\"]*(\"[^\"]*\"[^\"]*)*$)") );
         for (int a=0; a<args.length(); a++) {
           QString entry = args.at(a) ;
           entry = entry.replace("\\\"", "***REALQUOTE***") ;

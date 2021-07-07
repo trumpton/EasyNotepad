@@ -8,7 +8,7 @@
 #include <QInputDialog>
 #include <QStandardPaths>
 #include <QDateTime>
-#include <QRegExp>
+#include <QRegularExpression>
 #include <QProcess>
 #include <QStringList>
 #include <QTextDocumentFragment>
@@ -151,8 +151,8 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_timerTick()
 {
-    // ask=false, force=true, autosave=true
-    Save(false,true,true) ;
+    // ask=false, force=false, autosave=true
+    Save(false,false,true) ;
 }
 
 
@@ -209,6 +209,9 @@ bool MainWindow::Save(bool ask, bool force, bool isautosave)
        dosave=false ;
     }
 
+    QDir dir ;
+    QString filepath = fs.getFilePath() ;
+    dir.remove(filepath + ".autosave") ;
 
     if (dosave || force) {
 
@@ -219,15 +222,8 @@ bool MainWindow::Save(bool ask, bool force, bool isautosave)
         QString directory = fs.getFolderPath() ;
         if (!QDir(directory).exists()) QDir().mkdir(directory) ;
 
-        // Save file
-        QString filepath = fs.getFilePath() ;
-        QString autosavefilepath = filepath + ".autosave" ;
-
         if (isautosave) {
             filepath = filepath + ".autosave" ;
-        } else {
-            QDir dir ;
-            dir.remove(autosavefilepath) ;
         }
 
         if (fs.isFolderEncrypted()) {
@@ -253,7 +249,7 @@ bool MainWindow::Save(bool ask, bool force, bool isautosave)
         // Save Backup
         QString backupfilepath = fs.getBackupFilePath() ;
         if (fs.isFolderEncrypted()) {
-            if (!isautosave && !checklogin()) {
+            if (!isautosave && checklogin()) {
                 if (!enc->save(backupfilepath, bytes)) {
                     success=false ;
                 }
@@ -312,6 +308,8 @@ bool MainWindow::Load(QString path)
     bool isreadonly=true ;
     bool isdeleted=false ;
     isimportable=false ;
+    int filelen = -1 ;
+    int autosavelen = -1 ;
 
     Close() ;
 
@@ -342,8 +340,11 @@ bool MainWindow::Load(QString path)
 
             if (fileExists(path + ".autosave")) {
                 if (warningYesNoDialog(this, "Warning", "An auto-save version of the file exists.  Do you wish to load it?")) {
-                     // Load the autosave version
+                    // Calculate file length
+                    filelen = fs.getFileLength(path) ;
+                    // Load the autosave version
                      path = path + ".autosave" ;
+                     autosavelen = fs.getFileLength(path) ;
                 }
             }
 
@@ -354,10 +355,10 @@ bool MainWindow::Load(QString path)
 
     if (isimportable) {
         path=path.replace("\\","/") ;
-        QRegExp rx("(.*)/([^/]*)") ;
-        rx.setMinimal(false) ;
-        if (rx.indexIn(path)!=-1) {
-            description = rx.cap(2) ;
+        QRegularExpression rx("(.*)/([^/]*)") ;
+        QRegularExpressionMatch match = rx.match(path) ;
+        if (match.hasMatch()) {
+            description = match.captured(2) ;
         } else {
             description = path ;
         }
@@ -448,6 +449,10 @@ bool MainWindow::Load(QString path)
 
             // Set Encryption Status Flag
             encryptedlabel->setVisible(fs.isFileEncrypted()) ;
+
+            if (filelen>=0 && autosavelen<(filelen/4)*3) {
+                warningOkDialog(this,"Warning", "Warning: The autosave file is somewhat smaller than the last file - please check the loaded file carefully to ensure that it is complete. If it is not, close it without saving, and open the latest file instead of the autosaved one.") ;
+            }
         }
 
         dirtylabel->setVisible(false) ;
@@ -634,7 +639,7 @@ void MainWindow::on_action_Open_triggered()
                         QDir subdir(sdpath) ;
                         Q_FOREACH(QFileInfo fileinfo, subdir.entryInfoList(QDir::Files, QDir::DirsFirst)) {
                             QString filename = fileinfo.absoluteFilePath() ;
-                            if (filename.contains(QRegExp("\\.[bB][aA][kK]$"))) {
+                            if (filename.contains(QRegularExpression("\\.[bB][aA][kK]$"))) {
                                 QFile::remove(filename);
                             }
                         }
@@ -972,8 +977,8 @@ void MainWindow::on_action_Insert_Template_triggered()
             filedata.replace("$YEAR", datetime.date().toString("yy")) ;
 
             filedata.replace("$FILEPATH", filename) ;
-            filename.replace(QRegExp(".*: "), "") ;
-            folder.replace(QRegExp(":.*"), "") ;
+            filename.replace(QRegularExpression(".*: "), "") ;
+            folder.replace(QRegularExpression(":.*"), "") ;
             filedata.replace("$FILENAME", filename) ;
             filedata.replace("$FOLDERNAME", folder) ;
             filedata.replace("$TIME", datetime.time().toString("hh:mm")) ;
@@ -1030,7 +1035,7 @@ void MainWindow::on_action_Email_triggered()
        cmd = cmd.replace("$FILENAME", fs.getFileDescription(false, false)) ;
 
        QProcess *myProcess = new QProcess(NULL) ;
-       QStringList args = cmd.split( QRegExp(" (?=[^\"]*(\"[^\"]*\"[^\"]*)*$)") );
+       QStringList args = cmd.split( QRegularExpression(" (?=[^\"]*(\"[^\"]*\"[^\"]*)*$)") );
        for (int a=0; a<args.length(); a++) {
          QString entry = args.at(a) ;
          entry = entry.replace("\\\"", "***REALQUOTE***") ;
