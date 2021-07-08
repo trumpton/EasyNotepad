@@ -43,6 +43,8 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    initSound(this) ;
+
     enc=NULL ;
     editor=NULL ;
     readonlylabel=NULL ;
