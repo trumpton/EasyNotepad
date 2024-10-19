@@ -1064,10 +1064,11 @@ void MainWindow::on_action_Email_triggered()
 
 void MainWindow::on_action_About_triggered()
 {
-    QString text =
-    QString("EasyNotepad Version: %1.\n").arg(appHash()) +
-    QString("Library Version: %1.\n").arg(libVersion()) +
-    QString("It was built on: %1.\n\n").arg(buildDate()) ;
+    QString text ;
+
+    if (QString(GITHASH).length()>0) text = text + QString("Easy Notepad Version: %1.\n").arg(GITHASH) ;
+    if (QString(LIBHASH).length()>0) text = text + QString("Library Version: %1.\n").arg(LIBHASH) ;
+    text = text + QString("Build Date: %1.\n").arg(BUILDDATE) ;
 
     warningOkDialog(this, QString("About Easy Notepad"), text)  ;
 }

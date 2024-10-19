@@ -13,14 +13,36 @@ greaterThan(QT_MAJOR_VERSION, 6): QT += multimedia
 TARGET = EasyNotepad
 TEMPLATE = app
 
-# Include Git Hash / Revision Details
-# Uncomment NOGIT if Git not used.
-#DEFINES += NOGIT
-GITHASH = \\\"$$system(git --git-dir=\"$$PWD/.git\" describe --always --tags)\\\"
-LIBHASH = \\\"$$system(git --git-dir=\"$$PWD/../Lib/.git\" describe --always --tags)\\\"
-DEFINES += GITHASH=$$GITHASH
-DEFINES += LIBHASH=$$LIBHASH
-DEFINES += PWD=\\\"$$PWD\\\"
+
+# Start Common Versioning Includes
+
+unix:BUILDDATE = $$system(date +"%Y-%d-%m %H:%M:%S")
+win32:BUILDDATE = $$system(echo "%date:~6,4%-%date:~3,2%-%date:~0,2% %time:~0,8%")
+
+GITHASH = $$system(git --git-dir=\"$$PWD/.git\" describe --always --tags)
+GITHASH = $$replace(GITHASH,"v","")
+GITHASH = $$replace(GITHASH,"-",".")
+LIBHASH = $$system(git --git-dir=\"$$PWD/../Lib/.git\" describe --always --tags)
+LIBHASH = $$replace(LIBHASH,"v","")
+LIBHASH = $$replace(LIBHASH,"-",".")
+
+GITHASHPARTS = $$split(GITHASH, .)
+V1 = $$member(GITHASHPARTS,0)
+V2 = $$member(GITHASHPARTS,1)
+V3 = $$member(GITHASHPARTS,2)
+VERSION = "$${V1}.$${V2}.$${V3}"
+
+system("echo VERSION=\"$$VERSION\" > $$OUT_PWD/version.txt")
+system("echo GITHASH=\"$$GITHASH\" >> $$OUT_PWD/version.txt")
+system("echo LIBHASH=\"$$LIBHASH\" >> $$OUT_PWD/version.txt")
+system("echo BUILDDATE=\"$$BUILDDATE\" >> $$OUT_PWD/version.txt")
+
+DEFINES += GITHASH='"\\\"$$GITHASH\\\""'
+DEFINES += LIBHASH='"\\\"$$LIBHASH\\\""'
+DEFINES += BUILDDATE='"\\\"$$BUILDDATE\\\""'
+DEFINES += PWD='"\\\"$$PWD\\\""'
+
+# End Common Versioning Includes
 
 win32:RC_FILE=icon.rc
 win32:LIBS += -lUser32
